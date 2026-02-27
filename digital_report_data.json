@@ -1,0 +1,548 @@
+{
+  "client_id": 1000002,
+  "display_name": "Advanced Auto Repair",
+  "month_year": "February 2026",
+  "generated_at": "2026-02-27 12:16:02",
+  "pages": {
+    "cover page": {
+      "page_title": "Digital Marketing Summary",
+      "cards": {
+        "total_cost": 1205.88,
+        "total_clicks": 608,
+        "total_impressions": 161786,
+        "total_cpc": 1.98,
+        "total_cpm": 7.45,
+        "total_ctr": 0.38
+      },
+      "conversions": 13,
+      "chart_data": [
+        {
+          "date": "2026-02-01",
+          "gross": 29.9,
+          "clicks": 24,
+          "impressions": 9999,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-02",
+          "gross": 53.88,
+          "clicks": 19,
+          "impressions": 9933,
+          "conversions": 1
+        },
+        {
+          "date": "2026-02-03",
+          "gross": 43.61,
+          "clicks": 25,
+          "impressions": 6555,
+          "conversions": 1
+        },
+        {
+          "date": "2026-02-04",
+          "gross": 45.07,
+          "clicks": 10,
+          "impressions": 1989,
+          "conversions": 1
+        },
+        {
+          "date": "2026-02-05",
+          "gross": 37.78,
+          "clicks": 20,
+          "impressions": 2487,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-06",
+          "gross": 34.4,
+          "clicks": 20,
+          "impressions": 1837,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-07",
+          "gross": 25.82,
+          "clicks": 14,
+          "impressions": 1993,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-08",
+          "gross": 29.52,
+          "clicks": 19,
+          "impressions": 3378,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-09",
+          "gross": 52.13,
+          "clicks": 24,
+          "impressions": 2980,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-10",
+          "gross": 50.38,
+          "clicks": 25,
+          "impressions": 5955,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-11",
+          "gross": 38.9,
+          "clicks": 21,
+          "impressions": 3614,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-12",
+          "gross": 32.71,
+          "clicks": 17,
+          "impressions": 3066,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-13",
+          "gross": 38.16,
+          "clicks": 17,
+          "impressions": 3119,
+          "conversions": 1
+        },
+        {
+          "date": "2026-02-14",
+          "gross": 26.02,
+          "clicks": 12,
+          "impressions": 1645,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-15",
+          "gross": 33.74,
+          "clicks": 15,
+          "impressions": 2233,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-16",
+          "gross": 58.86,
+          "clicks": 15,
+          "impressions": 1957,
+          "conversions": 1
+        },
+        {
+          "date": "2026-02-17",
+          "gross": 51.4,
+          "clicks": 28,
+          "impressions": 2212,
+          "conversions": 4
+        },
+        {
+          "date": "2026-02-18",
+          "gross": 46.78,
+          "clicks": 34,
+          "impressions": 10557,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-19",
+          "gross": 37.46,
+          "clicks": 24,
+          "impressions": 3687,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-20",
+          "gross": 58.58,
+          "clicks": 33,
+          "impressions": 7331,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-21",
+          "gross": 43.88,
+          "clicks": 24,
+          "impressions": 7677,
+          "conversions": 1
+        },
+        {
+          "date": "2026-02-22",
+          "gross": 55.12,
+          "clicks": 22,
+          "impressions": 8638,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-23",
+          "gross": 66.46,
+          "clicks": 37,
+          "impressions": 15633,
+          "conversions": 2
+        },
+        {
+          "date": "2026-02-24",
+          "gross": 57.74,
+          "clicks": 27,
+          "impressions": 10412,
+          "conversions": 1
+        },
+        {
+          "date": "2026-02-25",
+          "gross": 53.51,
+          "clicks": 23,
+          "impressions": 11175,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-26",
+          "gross": 59.27,
+          "clicks": 29,
+          "impressions": 12069,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-27",
+          "gross": 16.89,
+          "clicks": 10,
+          "impressions": 2077,
+          "conversions": 0
+        }
+      ]
+    },
+    "social page": {
+      "page_title": "Social",
+      "cards": {
+        "total_cost": 585.56,
+        "total_clicks": 485,
+        "total_impressions": 130533,
+        "total_cpc": 1.21,
+        "total_cpm": 4.49,
+        "total_ctr": 0.37
+      },
+      "conversions": 0,
+      "campaign_table": [
+        {
+          "campaign": "Full Service",
+          "cost": 585.56,
+          "clicks": 485,
+          "impressions": 130533,
+          "conversions": 0,
+          "cpc": 1.21,
+          "cpm": 4.49,
+          "ctr": 0.37
+        }
+      ],
+      "ad_media": [
+        {
+          "ad_id": 120238579131130777,
+          "campaign_name": "Full Service ##149555",
+          "clicks": 326,
+          "impressions": 58685,
+          "image_url": "https://scontent-den2-1.xx.fbcdn.net/v/t45.1600-4/539583546_10234998489976816_6918580689577381936_n.jpg?_nc_cat=107&ccb=1-7&_nc_ohc=q0kbb4CxmjsQ7kNvwFItot1&_nc_oc=AdlLSXyyhPQ1m_DYucIZU-nzmYYErUh3SPDMuA857KAaLP8AqrMzAWW2EShJI2aACBY&_nc_zt=1&_nc_ht=scontent-den2-1.xx&edm=AAwGEdEEAAAA&_nc_gid=FTTsfseUY3C8fdAgYF08MA&_nc_tpa=Q5bMBQGBrP6bvxyI9ZuW7yG4WvD_Q5sgvkSem9V76hiv51BwBiSv2aC9EVaWjb2VjYAOV-8vm5WMRRLkaA&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&ur=52f3c4&_nc_sid=58080a&oh=00_AfteeMkJ31qQpemab4Fm8pPcMYlTCnN47EmdjomW6noMZg&oe=69A69C0F"
+        },
+        {
+          "ad_id": 120247698931540777,
+          "campaign_name": "Full Service ##149555",
+          "clicks": 139,
+          "impressions": 65293,
+          "image_url": "https://scontent-den2-1.xx.fbcdn.net/v/t45.1600-4/637971909_122136430310999052_2898048593183459147_n.jpg?_nc_cat=106&ccb=1-7&_nc_ohc=Mpr6kdecHTYQ7kNvwFPyN0R&_nc_oc=Admb8J2lxZuiw_oHoSBqKdBR19Xu_ZgqW2eFlZEkZMR04GJZMVZCHARXmK3oe0ZGPN0&_nc_zt=1&_nc_ht=scontent-den2-1.xx&edm=AAwGEdEEAAAA&_nc_gid=58GeGr7ZgEhbmg3zW0Fewg&_nc_tpa=Q5bMBQEmo63190HF4YUh2f_eTeTXsaxgAC9TSksL8MA2Ydyd7MPxAaAFX7OVEkEzaAPZVdSH1OcBAl683g&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&ur=52f3c4&_nc_sid=58080a&oh=00_Afu4_lELX6eiWbS3uPYnYgTYPhLx0Ph0bG6d-OFXZkM2vQ&oe=69A68FBB"
+        },
+        {
+          "ad_id": 120247698989020777,
+          "campaign_name": "Full Service ##149555",
+          "clicks": 3,
+          "impressions": 104,
+          "image_url": "https://scontent-den2-1.xx.fbcdn.net/v/t45.1600-4/637971909_122136430310999052_2898048593183459147_n.jpg?_nc_cat=106&ccb=1-7&_nc_ohc=Mpr6kdecHTYQ7kNvwFPyN0R&_nc_oc=Admb8J2lxZuiw_oHoSBqKdBR19Xu_ZgqW2eFlZEkZMR04GJZMVZCHARXmK3oe0ZGPN0&_nc_zt=1&_nc_ht=scontent-den2-1.xx&edm=AAwGEdEEAAAA&_nc_gid=n30b5ZLBpSr21WKt_Ka9Ng&_nc_tpa=Q5bMBQEayZCXYC1orhxc3AAkkbsQR7BpZOmjcU_IAo-WtVoKvDdPL2fLuvj32nF1bDVVUdN2wdnWHgSb1w&stp=c0.5000x0.5000f_dst-emg0_p64x64_q75_tt6&ur=52f3c4&_nc_sid=58080a&oh=00_Afs5V2YBUAOZwMcofnsqoiqlxo_X_7eVprns9GlO7qdjwg&oe=69A68FBB"
+        }
+      ]
+    },
+    "display page": {
+      "page_title": "Display Ads",
+      "cards": {
+        "total_cost": 107.06,
+        "total_clicks": 46,
+        "total_impressions": 3261,
+        "total_cpc": 2.33,
+        "total_cpm": 32.83,
+        "total_ctr": 1.41
+      },
+      "conversions": 0,
+      "campaign_table": [
+        {
+          "campaign": "Full Service - Display",
+          "cost": 107.0592,
+          "clicks": 46,
+          "impressions": 3261,
+          "conversions": 0,
+          "cpc": 2.33,
+          "cpm": 32.83,
+          "ctr": 1.41
+        }
+      ],
+      "ad_media": [
+        {
+          "ad_id": 797844174478,
+          "campaign_name": "Full Service - Display",
+          "clicks": 7,
+          "impressions": 362,
+          "image_url": null
+        },
+        {
+          "ad_id": 797844174607,
+          "campaign_name": "Full Service - Display",
+          "clicks": 6,
+          "impressions": 443,
+          "image_url": null
+        },
+        {
+          "ad_id": 797811030453,
+          "campaign_name": "Full Service - Display",
+          "clicks": 6,
+          "impressions": 149,
+          "image_url": "https://tpc.googlesyndication.com/simgad/4719948283729339187"
+        },
+        {
+          "ad_id": 797844174613,
+          "campaign_name": "Full Service - Display",
+          "clicks": 5,
+          "impressions": 1415,
+          "image_url": null
+        },
+        {
+          "ad_id": 797844174475,
+          "campaign_name": "Full Service - Display",
+          "clicks": 3,
+          "impressions": 243,
+          "image_url": null
+        }
+      ]
+    },
+    "search page": {
+      "page_title": "Search",
+      "cards": {
+        "total_cost": 313.26,
+        "total_clicks": 67,
+        "total_impressions": 985,
+        "total_cpc": 4.68,
+        "total_cpm": 318.03,
+        "total_ctr": 6.8
+      },
+      "conversions": 13,
+      "campaign_table": [
+        {
+          "campaign": "Advanced Auto - Search",
+          "cost": 313.2598,
+          "clicks": 67,
+          "impressions": 985,
+          "conversions": 13,
+          "cpc": 4.68,
+          "cpm": 318.03,
+          "ctr": 6.8
+        }
+      ],
+      "top_keywords": [
+        {
+          "keyword_text": "car repair",
+          "match_type": "PHRASE",
+          "clicks": 8,
+          "impressions": 148,
+          "ctr": 5.41
+        },
+        {
+          "keyword_text": "auto repair shops in rapid city sd",
+          "match_type": "EXACT",
+          "clicks": 7,
+          "impressions": 101,
+          "ctr": 6.93
+        },
+        {
+          "keyword_text": "mechanic near me",
+          "match_type": "EXACT",
+          "clicks": 7,
+          "impressions": 192,
+          "ctr": 3.65
+        },
+        {
+          "keyword_text": "auto repair shops in rapid city sd",
+          "match_type": "PHRASE",
+          "clicks": 7,
+          "impressions": 216,
+          "ctr": 3.24
+        },
+        {
+          "keyword_text": "car maintenance shop",
+          "match_type": "PHRASE",
+          "clicks": 6,
+          "impressions": 167,
+          "ctr": 3.59
+        },
+        {
+          "keyword_text": "auto shop around me",
+          "match_type": "PHRASE",
+          "clicks": 6,
+          "impressions": 38,
+          "ctr": 15.79
+        },
+        {
+          "keyword_text": "transmission shop",
+          "match_type": "PHRASE",
+          "clicks": 4,
+          "impressions": 45,
+          "ctr": 8.89
+        },
+        {
+          "keyword_text": "mechanic near me",
+          "match_type": "PHRASE",
+          "clicks": 2,
+          "impressions": 40,
+          "ctr": 5.0
+        },
+        {
+          "keyword_text": "rapid city fix car",
+          "match_type": "EXACT",
+          "clicks": 2,
+          "impressions": 98,
+          "ctr": 2.04
+        },
+        {
+          "keyword_text": "auto garage shop",
+          "match_type": "EXACT",
+          "clicks": 2,
+          "impressions": 59,
+          "ctr": 3.39
+        },
+        {
+          "keyword_text": "rapid city fix car",
+          "match_type": "PHRASE",
+          "clicks": 2,
+          "impressions": 69,
+          "ctr": 2.9
+        },
+        {
+          "keyword_text": "near me auto",
+          "match_type": "EXACT",
+          "clicks": 2,
+          "impressions": 63,
+          "ctr": 3.17
+        },
+        {
+          "keyword_text": "car maintenance shop",
+          "match_type": "EXACT",
+          "clicks": 2,
+          "impressions": 38,
+          "ctr": 5.26
+        },
+        {
+          "keyword_text": "auto shop",
+          "match_type": "PHRASE",
+          "clicks": 1,
+          "impressions": 114,
+          "ctr": 0.88
+        },
+        {
+          "keyword_text": "car service shop",
+          "match_type": "PHRASE",
+          "clicks": 0,
+          "impressions": 1,
+          "ctr": 0.0
+        },
+        {
+          "keyword_text": "engine rebuilding services",
+          "match_type": "PHRASE",
+          "clicks": 0,
+          "impressions": 7,
+          "ctr": 0.0
+        },
+        {
+          "keyword_text": "auto engine service",
+          "match_type": "PHRASE",
+          "clicks": 0,
+          "impressions": 6,
+          "ctr": 0.0
+        },
+        {
+          "keyword_text": "oil change",
+          "match_type": "PHRASE",
+          "clicks": 0,
+          "impressions": 5,
+          "ctr": 0.0
+        },
+        {
+          "keyword_text": "repair store near me",
+          "match_type": "PHRASE",
+          "clicks": 0,
+          "impressions": 1,
+          "ctr": 0.0
+        },
+        {
+          "keyword_text": "service shops",
+          "match_type": "EXACT",
+          "clicks": 0,
+          "impressions": 2,
+          "ctr": 0.0
+        }
+      ]
+    },
+    "website page": {
+      "page_title": "Website Pages",
+      "cards": {
+        "total_cost": 200.0,
+        "total_clicks": 10,
+        "total_impressions": 27007,
+        "total_cpc": 20.0,
+        "total_cpm": 7.41,
+        "total_ctr": 0.04
+      },
+      "conversions": 0,
+      "campaign_table": [
+        {
+          "campaign": "Advanced Auto Repair - Rapid City Post",
+          "cost": 200.0034,
+          "clicks": 10,
+          "impressions": 27007,
+          "conversions": 0,
+          "cpc": 20.0,
+          "cpm": 7.41,
+          "ctr": 0.04
+        }
+      ],
+      "ad_media": [
+        {
+          "ad_id": 138528111502,
+          "campaign_name": "Advanced Auto Repair - Rapid City Post",
+          "clicks": 4,
+          "impressions": 4382,
+          "image_url": "https://tpc.googlesyndication.com/pageadimg/imgad?id=CICAgJD8lOOREhCsAhjYBCgBMgi0mqa7pdJJAQ"
+        },
+        {
+          "ad_id": 138528111493,
+          "campaign_name": "Advanced Auto Repair - Rapid City Post",
+          "clicks": 2,
+          "impressions": 3307,
+          "image_url": "https://tpc.googlesyndication.com/pageadimg/imgad?id=CICAgJD8lL3Y7AEQ2AUYWigBMgi7upcKSNUMUQ"
+        },
+        {
+          "ad_id": 138546501347,
+          "campaign_name": "Advanced Auto Repair - Rapid City Post",
+          "clicks": 1,
+          "impressions": 67,
+          "image_url": "https://tpc.googlesyndication.com/pageadimg/imgad?id=CICAgJDawKuYZxDAAhgyKAEyCAywXr5aLzUT"
+        },
+        {
+          "ad_id": 138528111487,
+          "campaign_name": "Advanced Auto Repair - Rapid City Post",
+          "clicks": 1,
+          "impressions": 1277,
+          "image_url": "https://tpc.googlesyndication.com/pageadimg/imgad?id=CICAgJD8lKPXsQEQrAIY-gEoATII3RXBUJWYh4M"
+        },
+        {
+          "ad_id": 138546195612,
+          "campaign_name": "Advanced Auto Repair - Rapid City Post",
+          "clicks": 0,
+          "impressions": 24,
+          "image_url": "https://tpc.googlesyndication.com/pageadimg/imgad?id=CICAgJDW7N3GFhCsAhj6ASgBMgihDIANHNL30A"
+        }
+      ]
+    },
+    "youtube page": null,
+    "performance_max page": null
+  }
+}

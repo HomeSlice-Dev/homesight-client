@@ -1,0 +1,31 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Print / PDF setup ─────────────────────────────────────────────────────── */
+
+/* Landscape pages, no browser-added margins */
+@page {
+  size: landscape;
+  margin: 0;
+}
+
+@media print {
+  /* Force all background colors and images to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Remove body scroll artifacts */
+  body {
+    overflow: visible;
+  }
+}
