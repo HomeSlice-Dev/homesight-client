@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from './config';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
@@ -11,7 +12,7 @@ export default function Home({ onFetchSuccess }) {
   async function handleFetch() {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/reports?client_id=${encodeURIComponent(input)}`);
+      const res = await fetch(`${API_URL}/api/reports?client_id=${encodeURIComponent(input)}`);
       const data = await res.json();
       console.log('API results:', data);
       onFetchSuccess(data);

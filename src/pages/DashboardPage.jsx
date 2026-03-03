@@ -12,6 +12,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import JSZip from 'jszip';
 import HomesliceReport from '../HomesliceReport';
 import { elementToPdfBlob, safePdfFilename, downloadBlob } from '../utils/pdfUtils';
+import { API_URL } from '../config';
 
 export default function DashboardPage() {
   const [input, setInput] = useState('');
@@ -36,7 +37,7 @@ export default function DashboardPage() {
     if (!input.trim()) return;
     setLoadingType('single');
     try {
-      const res = await fetch(`http://localhost:8000/api/reports?client_id=${encodeURIComponent(input)}`);
+      const res = await fetch(`${API_URL}/api/reports?client_id=${encodeURIComponent(input)}`);
       const data = await res.json();
       setReports([data]);
       setExpandedIds(new Set([data.client_id]));
@@ -50,7 +51,7 @@ export default function DashboardPage() {
   async function handleFetchAll() {
     setLoadingType('all');
     try {
-      const res = await fetch('http://localhost:8000/api/reports');
+      const res = await fetch(`${API_URL}/api/reports`);
       const data = await res.json();
       setReports(data);
       setExpandedIds(new Set());
