@@ -5,8 +5,10 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import LinearProgress from '@mui/material/LinearProgress';
+import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/Download';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import JSZip from 'jszip';
@@ -20,6 +22,7 @@ export default function DashboardPage() {
   const [reports, setReports] = useState([]);
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [downloadProgress, setDownloadProgress] = useState(null); // null | { current, total, name }
+  const [error, setError] = useState(null); // null | { status: number, message: string }
 
   function toggleExpanded(clientId) {
     setExpandedIds((prev) => {
@@ -36,13 +39,21 @@ export default function DashboardPage() {
   async function handleFetch() {
     if (!input.trim()) return;
     setLoadingType('single');
+    setError(null);
+    setReports([]);
     try {
       const res = await fetch(`${API_URL}/api/reports?client_id=${encodeURIComponent(input)}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError({ status: res.status, message: body.detail || body.message || 'Something went wrong.' });
+        return;
+      }
       const data = await res.json();
       setReports([data]);
       setExpandedIds(new Set([data.client_id]));
     } catch (err) {
       console.error('Fetch error:', err);
+      setError({ status: 0, message: 'Unable to reach the server. Check your connection and try again.' });
     } finally {
       setLoadingType(null);
     }
@@ -50,13 +61,21 @@ export default function DashboardPage() {
 
   async function handleFetchAll() {
     setLoadingType('all');
+    setError(null);
+    setReports([]);
     try {
       const res = await fetch(`${API_URL}/api/reports`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError({ status: res.status, message: body.detail || body.message || 'Something went wrong.' });
+        return;
+      }
       const data = await res.json();
       setReports(data);
       setExpandedIds(new Set());
     } catch (err) {
       console.error('Fetch all error:', err);
+      setError({ status: 0, message: 'Unable to reach the server. Check your connection and try again.' });
     } finally {
       setLoadingType(null);
     }
@@ -209,6 +228,82 @@ export default function DashboardPage() {
           </Box>
         )}
       </Box>
+
+      {/* Skeleton loading rows */}
+      {isLoading && (
+        <Box sx={{ mx: { xs: 1, md: 3 }, mb: 4 }}>
+          {Array.from({ length: loadingType === 'single' ? 1 : 4 }).map((_, i) => (
+            <Box
+              key={i}
+              sx={{
+                bgcolor: '#111d2b',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                px: 3,
+                py: 2,
+                '&:first-of-type': { borderRadius: '12px 12px 0 0' },
+                '&:last-of-type': { borderRadius: '0 0 12px 12px', borderBottom: 'none' },
+                '&:only-of-type': { borderRadius: '12px' },
+              }}
+            >
+              <Skeleton variant="text" width="40%" height={22} sx={{ bgcolor: 'rgba(255,255,255,0.08)', mb: 0.5 }} />
+              <Skeleton variant="text" width="20%" height={16} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Error page */}
+      {error && !isLoading && (
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pt: 10,
+            px: 3,
+            textAlign: 'center',
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: { xs: '5rem', md: '8rem' },
+              fontWeight: 900,
+              lineHeight: 1,
+              color: 'rgba(129,187,230,0.18)',
+              letterSpacing: -4,
+              mb: 2,
+            }}
+          >
+            {error.status || 'ERR'}
+          </Typography>
+          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.4rem', mb: 1 }}>
+            {error.status === 404
+              ? 'Client Not Found'
+              : error.status === 500
+              ? 'Server Error'
+              : error.status === 0
+              ? 'Connection Error'
+              : 'Request Failed'}
+          </Typography>
+          <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.95rem', maxWidth: 420, mb: 4 }}>
+            {error.message}
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => { setError(null); setReports([]); setInput(''); }}
+            sx={{
+              borderColor: 'rgba(255,255,255,0.3)',
+              color: 'rgba(255,255,255,0.8)',
+              '&:hover': { borderColor: '#81bbe6', color: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
+              px: 4,
+            }}
+          >
+            Back to Dashboard
+          </Button>
+        </Box>
+      )}
 
       {/* Accordion client list */}
       {reports.length > 0 && (
