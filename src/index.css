@@ -28,4 +28,9 @@ body {
   body {
     overflow: visible;
   }
+
+  /* Hide everything that isn't the report (sidebar, appbar, search bar) */
+  .print-hide {
+    display: none !important;
+  }
 }

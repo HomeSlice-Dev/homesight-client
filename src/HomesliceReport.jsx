@@ -2,12 +2,13 @@ import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
+import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import Dialog from '@mui/material/Dialog';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import PrintIcon from '@mui/icons-material/Print';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { elementToPdfBlob, safePdfFilename, downloadBlob } from './utils/pdfUtils';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { DataGrid } from '@mui/x-data-grid/DataGrid';
 
@@ -120,10 +121,10 @@ function DigitalLineChart({ chartData = [] }) {
     <Box sx={{ width: '100%', mb: 2 }}>
       <LineChart
         height={320}
-        xAxis={[{ scaleType: 'point', data: dates, tickLabelStyle: { fill: '#fff', fontSize: 11 } }]}
+        xAxis={[{ scaleType: 'point', data: dates, tickLabelstyle: { fill: '#fff', fontSize: 11 } }]}
         yAxis={[
-          { id: 'clicks',      position: 'left',  tickLabelStyle: { fill: '#81bbe6', fontSize: 11 } },
-          { id: 'impressions', position: 'right', tickLabelStyle: { fill: '#000000', fontSize: 11 } },
+          { id: 'clicks',      position: 'left',  tickLabelstyle: { fill: '#81bbe6', fontSize: 11 } },
+          { id: 'impressions', position: 'right', tickLabelstyle: { fill: '#000000', fontSize: 11 } },
         ]}
         series={[
           { yAxisId: 'clicks',      data: clicks,      label: 'Clicks',      color: '#81bbe6', showMark: false },
@@ -324,6 +325,7 @@ function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts })
 
   return (
     <Box
+      data-report-section
       sx={{
         bgcolor,
         borderRadius: 5,
@@ -335,13 +337,8 @@ function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts })
         mr: isLabelLeft ? { xs: 0, md: '30px' } : { xs: 0, md: '-30px' },
         minHeight: { xs: 'unset', md: 580 },
         '@media print': {
-          breakBefore: 'page',
-          minHeight: '100vh',
-          borderRadius: 0,
-          mb: 0,
-          ml: 0,
-          mr: 0,
           overflow: 'visible',
+          breakInside: 'avoid',
         },
       }}
     >
@@ -351,7 +348,7 @@ function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts })
 }
 
 // ─── Root report ──────────────────────────────────────────────────────────────
-export default function HomesliceReport({ data, onBack }) {
+export default function HomesliceReport({ data }) {
   const { icons } = ASSETS;
 
   if (!data) return null;
@@ -416,18 +413,30 @@ export default function HomesliceReport({ data, onBack }) {
     },
   ].filter(Boolean);
 
+  const reportId = `homesight-report-${data.client_id}`;
+  const [saving, setSaving] = useState(false);
+
+  async function handleSavePdf() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const el = document.getElementById(reportId);
+      const blob = await elementToPdfBlob(el);
+      downloadBlob(blob, safePdfFilename(data.display_name));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <Box
+      id={reportId}
       sx={{
         bgcolor: '#0d1b2a',
         minHeight: '100vh',
         position: 'relative',
         overflow: 'hidden',
-        '@media print': {
-          printColorAdjust: 'exact',
-          WebkitPrintColorAdjust: 'exact',
-          overflow: 'visible',
-        },
+        '@media print': { overflow: 'visible' },
       }}
     >
       {/* Decorative background image */}
@@ -447,7 +456,6 @@ export default function HomesliceReport({ data, onBack }) {
           objectFit: 'cover',
           opacity: 0.55,
           zIndex: 0,
-          '@media print': { opacity: 0.3 },
         }}
       />
 
@@ -455,22 +463,13 @@ export default function HomesliceReport({ data, onBack }) {
 
         {/* ── HEADER ────────────────────────────────────────────────────── */}
         <Box
+          data-report-section
           sx={{
             textAlign: 'center',
             pt: { xs: 4, md: 7 },
             pb: { xs: 5, md: 8 },
             px: { xs: 2, md: 4 },
             position: 'relative',
-            '@media print': {
-              minHeight: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              breakAfter: 'page',
-              pt: 0,
-              pb: 0,
-            },
           }}
         >
           <Box
@@ -556,7 +555,6 @@ export default function HomesliceReport({ data, onBack }) {
           sx={{
             px: { xs: 1, md: 4 },
             pb: 8,
-            '@media print': { px: 0, pb: 0 },
           }}
         >
           {sections.map((section) => (
@@ -565,11 +563,12 @@ export default function HomesliceReport({ data, onBack }) {
         </Box>
       </Box>
 
-      {/* ── PRINT BUTTON — hidden when printing ─────────────────────────── */}
+      {/* ── SAVE AS PDF ─────────────────────────────────────────────────── */}
       <Fab
         color="primary"
-        title="Print / Save as PDF"
-        onClick={() => window.print()}
+        title={saving ? 'Generating PDF…' : 'Save as PDF'}
+        onClick={handleSavePdf}
+        disabled={saving}
         sx={{
           position: 'fixed',
           bottom: 28,
@@ -577,27 +576,9 @@ export default function HomesliceReport({ data, onBack }) {
           '@media print': { display: 'none' },
         }}
       >
-        <PrintIcon />
+        {saving ? <CircularProgress size={24} color="inherit" /> : <PictureAsPdfIcon />}
       </Fab>
 
-      {/* ── BACK BUTTON — hidden when printing ──────────────────────────── */}
-      {onBack && (
-        <Fab
-          title="Back to Home"
-          onClick={onBack}
-          sx={{
-            position: 'fixed',
-            bottom: 28,
-            left: 28,
-            bgcolor: '#333',
-            color: '#fff',
-            '&:hover': { bgcolor: '#555' },
-            '@media print': { display: 'none' },
-          }}
-        >
-          <ArrowBackIcon />
-        </Fab>
-      )}
     </Box>
   );
 }

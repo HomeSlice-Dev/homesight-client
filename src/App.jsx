@@ -1,14 +1,29 @@
 import { useState } from 'react';
-import Home from './Home';
-import HomesliceReport from './HomesliceReport';
+import Layout from './components/Layout';
+import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
-  const [reportData, setReportData] = useState(null);
+  const [activePage, setActivePage] = useState('dashboard');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  if (reportData) {
-    return <HomesliceReport data={reportData} onBack={() => setReportData(null)} />;
+  function renderPage() {
+    switch (activePage) {
+      case 'profile': return <ProfilePage />;
+      default:        return <DashboardPage />;
+    }
   }
-  return <Home onFetchSuccess={setReportData} />;
+
+  return (
+    <Layout
+      activePage={activePage}
+      onNavigate={setActivePage}
+      isLoggedIn={isLoggedIn}
+      onLoginToggle={() => setIsLoggedIn((prev) => !prev)}
+    >
+      {renderPage()}
+    </Layout>
+  );
 }
 
 export default App;

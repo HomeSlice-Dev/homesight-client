@@ -16,6 +16,9 @@
     "@mui/material": "^7.3.8",
     "@mui/x-charts": "^8.27.0",
     "@mui/x-data-grid": "^8.27.3",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.0",
+    "jszip": "^3.10.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
