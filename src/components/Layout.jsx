@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -18,6 +19,7 @@ import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
+import { useAuth } from '../context/AuthContext';
 
 const DRAWER_WIDTH = 240;
 const DRAWER_MINI  = 64;
@@ -67,20 +69,24 @@ function NavItem({ label, icon, active, onClick, expanded }) {
   );
 }
 
-export default function Layout({ children, activePage, onNavigate, isLoggedIn, onLoginToggle }) {
+export default function Layout({ children }) {
   const [open, setOpen] = useState(true);
   const drawerWidth = open ? DRAWER_WIDTH : DRAWER_MINI;
 
-  const transitionMixin = (props) => ({
-    transition: (theme) =>
-      theme.transitions.create(props, {
-        easing: theme.transitions.easing.sharp,
-        duration: (theme) =>
-          open
-            ? theme.transitions.duration.enteringScreen
-            : theme.transitions.duration.leavingScreen,
-      }),
-  });
+  const navigate                    = useNavigate();
+  const { pathname }                = useLocation();
+  const { isAuthenticated, logout } = useAuth();
+
+  const activePage = pathname.startsWith('/profile') ? 'profile' : 'dashboard';
+
+  function handleLoginToggle() {
+    if (isAuthenticated) {
+      logout();
+      navigate('/login');
+    } else {
+      navigate('/login');
+    }
+  }
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#0d1b2a' }}>
@@ -182,14 +188,14 @@ export default function Layout({ children, activePage, onNavigate, isLoggedIn, o
               label="Dashboard"
               icon={<DashboardIcon />}
               active={activePage === 'dashboard'}
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => navigate('/')}
               expanded={open}
             />
             <NavItem
               label="Profile"
               icon={<PersonIcon />}
               active={activePage === 'profile'}
-              onClick={() => onNavigate('profile')}
+              onClick={() => navigate('/profile')}
               expanded={open}
             />
           </List>
@@ -198,9 +204,9 @@ export default function Layout({ children, activePage, onNavigate, isLoggedIn, o
 
           <List sx={{ pb: 1 }}>
             <NavItem
-              label={isLoggedIn ? 'Logout' : 'Login'}
-              icon={isLoggedIn ? <LogoutIcon /> : <LoginIcon />}
-              onClick={onLoginToggle}
+              label={isAuthenticated ? 'Logout' : 'Login'}
+              icon={isAuthenticated ? <LogoutIcon /> : <LoginIcon />}
+              onClick={handleLoginToggle}
               expanded={open}
             />
           </List>
