@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -70,7 +71,8 @@ function NavItem({ label, icon, active, onClick, expanded }) {
 }
 
 export default function Layout({ children }) {
-  const [open, setOpen] = useState(true);
+  const isDesktop = useMediaQuery('(min-width:900px)');
+  const [open, setOpen] = useState(() => isDesktop);
   const drawerWidth = open ? DRAWER_WIDTH : DRAWER_MINI;
 
   const navigate                    = useNavigate();
