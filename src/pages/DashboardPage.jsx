@@ -5,13 +5,18 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Divider from '@mui/material/Divider';
 import LinearProgress from '@mui/material/LinearProgress';
 import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DownloadIcon from '@mui/icons-material/Download';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
+import SearchIcon from '@mui/icons-material/Search';
 import JSZip from 'jszip';
 import HomesliceReport from '../HomesliceReport';
 import { elementToPdfBlob, safePdfFilename, downloadBlob } from '../utils/pdfUtils';
@@ -147,83 +152,175 @@ export default function DashboardPage() {
 
   return (
     <Box>
-      {/* Search / action bar */}
+      {/* ── Action bar ── */}
       <Box className="print-hide" sx={{ px: 3, pt: 3, pb: 3 }}>
-        <Typography
-          sx={{ color: '#fff', fontWeight: 700, fontSize: '1.4rem', mb: 2, letterSpacing: 0.5 }}
-        >
-          Client Report Lookup
-        </Typography>
 
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', maxWidth: 760 }}>
-          <TextField
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter client ID..."
-            variant="outlined"
-            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
-            sx={{
-              flex: '1 1 220px',
-              '& .MuiOutlinedInput-root': {
-                color: '#fff',
-                '& fieldset': { borderColor: 'rgba(255,255,255,0.25)' },
-                '&:hover fieldset': { borderColor: '#81bbe6' },
-                '&.Mui-focused fieldset': { borderColor: '#81bbe6' },
-              },
-              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)' },
-            }}
-          />
-
-          <Button
-            variant="contained"
-            onClick={handleFetch}
-            disabled={isLoading || isDownloading}
-            sx={{ whiteSpace: 'nowrap', bgcolor: '#1c5784', '&:hover': { bgcolor: '#81bbe6' }, px: 4 }}
-          >
-            {loadingType === 'single' ? 'Loading...' : 'Fetch Results'}
-          </Button>
-
+        {/* Header row: title + All Clients */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.4rem', letterSpacing: 0.5 }}>
+            Client Report Lookup
+          </Typography>
           <Button
             variant="outlined"
+            startIcon={
+              loadingType === 'all'
+                ? <CircularProgress size={14} sx={{ color: 'inherit' }} />
+                : <PeopleOutlineIcon fontSize="small" />
+            }
             onClick={handleFetchAll}
             disabled={isLoading || isDownloading}
             sx={{
               whiteSpace: 'nowrap',
-              borderColor: 'rgba(255,255,255,0.3)',
-              color: 'rgba(255,255,255,0.8)',
+              borderColor: 'rgba(255,255,255,0.2)',
+              color: 'rgba(255,255,255,0.65)',
+              fontSize: '0.8rem',
+              px: 2,
               '&:hover': { borderColor: '#81bbe6', color: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
-              px: 4,
+              '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
             }}
           >
-            {loadingType === 'all' ? 'Loading...' : 'Fetch All'}
+            {loadingType === 'all' ? 'Loading…' : 'All Clients'}
+          </Button>
+        </Box>
+
+        {/* Toolbar surface */}
+        <Box
+          sx={{
+            bgcolor: '#111d2b',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 2,
+            px: 1.5,
+            py: 1.25,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* ── Client ID search ── */}
+          <TextField
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Client ID"
+            variant="outlined"
+            size="small"
+            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
+            sx={{
+              flex: '1 1 160px',
+              maxWidth: 240,
+              '& .MuiOutlinedInput-root': {
+                color: '#fff',
+                bgcolor: 'rgba(255,255,255,0.04)',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
+                '&:hover fieldset': { borderColor: '#81bbe6' },
+                '&.Mui-focused fieldset': { borderColor: '#81bbe6' },
+              },
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' },
+            }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleFetch}
+            disabled={isLoading || isDownloading}
+            startIcon={
+              loadingType === 'single'
+                ? <CircularProgress size={14} color="inherit" />
+                : <SearchIcon fontSize="small" />
+            }
+            sx={{
+              whiteSpace: 'nowrap',
+              bgcolor: '#1c5784',
+              '&:hover': { bgcolor: '#81bbe6' },
+              '&.Mui-disabled': { bgcolor: 'rgba(28,87,132,0.35)', color: 'rgba(255,255,255,0.3)' },
+              px: 2.5,
+              fontSize: '0.875rem',
+            }}
+          >
+            {loadingType === 'single' ? 'Searching…' : 'Search'}
           </Button>
 
-          {/* Download All — only visible when multiple reports are loaded */}
+          <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)', mx: 0.5 }} />
+
+          {/* ── Date range (placeholder — functionality coming soon) ── */}
+          <Tooltip title="Date filtering coming soon" placement="top" arrow>
+            <span>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<CalendarMonthIcon fontSize="small" />}
+                disabled
+                sx={{
+                  whiteSpace: 'nowrap',
+                  borderColor: 'rgba(255,255,255,0.12)',
+                  color: 'rgba(255,255,255,0.3)',
+                  textTransform: 'none',
+                  fontWeight: 400,
+                  fontSize: '0.8rem',
+                  px: 1.5,
+                  '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.25)' },
+                }}
+              >
+                Start month
+              </Button>
+            </span>
+          </Tooltip>
+          <Typography sx={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', userSelect: 'none' }}>
+            —
+          </Typography>
+          <Tooltip title="Date filtering coming soon" placement="top" arrow>
+            <span>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<CalendarMonthIcon fontSize="small" />}
+                disabled
+                sx={{
+                  whiteSpace: 'nowrap',
+                  borderColor: 'rgba(255,255,255,0.12)',
+                  color: 'rgba(255,255,255,0.3)',
+                  textTransform: 'none',
+                  fontWeight: 400,
+                  fontSize: '0.8rem',
+                  px: 1.5,
+                  '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.25)' },
+                }}
+              >
+                End month
+              </Button>
+            </span>
+          </Tooltip>
+
+          {/* ── Spacer ── */}
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* ── Download All — right-anchored, visible when multiple reports loaded ── */}
           {reports.length > 1 && (
             <Button
               variant="outlined"
-              startIcon={<DownloadIcon />}
+              size="small"
+              startIcon={<DownloadIcon fontSize="small" />}
               onClick={handleDownloadAll}
               disabled={isLoading || isDownloading}
               sx={{
                 whiteSpace: 'nowrap',
-                borderColor: 'rgba(129,187,230,0.5)',
+                borderColor: 'rgba(129,187,230,0.4)',
                 color: '#81bbe6',
+                fontSize: '0.8rem',
+                px: 2,
                 '&:hover': { borderColor: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
-                '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.2)' },
-                px: 3,
+                '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
               }}
             >
               {isDownloading
-                ? `Generating ${downloadProgress.current} / ${downloadProgress.total}…`
+                ? `${downloadProgress.current} / ${downloadProgress.total}`
                 : 'Download All PDFs'}
             </Button>
           )}
         </Box>
 
-        {/* Progress bar shown while generating PDFs */}
+        {/* Progress bar — below toolbar when generating PDFs */}
         {isDownloading && (
-          <Box sx={{ mt: 2, maxWidth: 520 }}>
+          <Box sx={{ mt: 1.5, maxWidth: 520 }}>
             <LinearProgress
               variant="determinate"
               value={(downloadProgress.current / downloadProgress.total) * 100}
@@ -233,7 +330,7 @@ export default function DashboardPage() {
                 '& .MuiLinearProgress-bar': { bgcolor: '#81bbe6' },
               }}
             />
-            <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', mt: 0.75 }}>
+            <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', mt: 0.75 }}>
               Generating PDF {downloadProgress.current} of {downloadProgress.total} — {downloadProgress.name}
             </Typography>
           </Box>
