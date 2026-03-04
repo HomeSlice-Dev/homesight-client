@@ -354,11 +354,11 @@ export default function HomesliceReport({ data }) {
   if (!data) return null;
 
   const pages = data.pages;
-  const coverPage  = pages['cover page'];
-  const socialPage = pages['social page'];
-  const displayPage = pages['display page'];
-  const searchPage = pages['search page'];
-  const websitePage = pages['website page'];
+  const coverPage   = pages['cover'];
+  const socialPage  = pages['social'];
+  const displayPage = pages['display'];
+  const searchPage  = pages['search'];
+  const websitePage = pages['website'];
 
   const sections = [
     coverPage && {
