@@ -525,7 +525,7 @@ export default function HomesliceReport({ data }) {
 
           <Box
             component="img"
-            src={ASSETS.logo}
+            src={data.pages?.cover?.logo_url ?? ASSETS.logo}
             alt={data.display_name}
             sx={{
               display: 'block',
