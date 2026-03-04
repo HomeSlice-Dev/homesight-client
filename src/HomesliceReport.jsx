@@ -13,22 +13,41 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import { DataGrid } from '@mui/x-data-grid/DataGrid';
 
 // Figma asset URLs — valid for ~7 days from generation
+// const ASSETS = {
+//   bgMain:     'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/4b61416a-5e88-4cc2-bd6f-c848ee76ce2b.png',
+//   logo:       'https://www.figma.com/api/mcp/asset/aa7fb38c-0b35-4b90-9622-7d52968ec53f',
+//   screenshot: 'https://www.figma.com/api/mcp/asset/5676c863-c126-4324-a818-6907fc66e2e6',
+//   homeslice:  'https://www.figma.com/api/mcp/asset/df6679d5-8ad7-4af7-bed1-4403bbc8b25d',
+//   icons: {
+//     cost:        'https://www.figma.com/api/mcp/asset/f4cc193b-f759-4e12-9273-c657f31fb4b7',
+//     clicks:      'https://www.figma.com/api/mcp/asset/77e9db22-28f6-42c8-afe6-edd21acfd7f1',
+//     impressions: 'https://www.figma.com/api/mcp/asset/4908c8b2-0667-4d08-a154-db77dab4d674',
+//     ctr:         'https://www.figma.com/api/mcp/asset/5fcc513c-ae46-4238-9773-0dc1c2e4627f',
+//     cpc1: 'https://www.figma.com/api/mcp/asset/8c86aeb8-4b7e-4c9c-8ae5-0a85e58eec63',
+//     cpm1: 'https://www.figma.com/api/mcp/asset/9e0ea44b-f008-42c1-8967-e96ef912f952',
+//     cpc2: 'https://www.figma.com/api/mcp/asset/2b5dfb86-ab84-42ea-8899-0df53d267851',
+//     cpm2: 'https://www.figma.com/api/mcp/asset/bd500f2e-fa7e-4129-9eed-16ef822e1eaa',
+//     cpc3: 'https://www.figma.com/api/mcp/asset/1303c689-f740-417c-972c-e02f4ba4b3f5',
+//     cpm3: 'https://www.figma.com/api/mcp/asset/5d32fa68-6967-4675-81b7-a84608316596',
+//   },
+// };
+
 const ASSETS = {
-  bgMain:     'https://www.figma.com/api/mcp/asset/4b61416a-5e88-4cc2-bd6f-c848ee76ce2b',
+  bgMain:     'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/4b61416a-5e88-4cc2-bd6f-c848ee76ce2b.png',
   logo:       'https://www.figma.com/api/mcp/asset/aa7fb38c-0b35-4b90-9622-7d52968ec53f',
-  screenshot: 'https://www.figma.com/api/mcp/asset/5676c863-c126-4324-a818-6907fc66e2e6',
-  homeslice:  'https://www.figma.com/api/mcp/asset/df6679d5-8ad7-4af7-bed1-4403bbc8b25d',
+  screenshot: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/5676c863-c126-4324-a818-6907fc66e2e6.png',
+  homeslice:  'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/homeslice-logo.svg',
   icons: {
-    cost:        'https://www.figma.com/api/mcp/asset/f4cc193b-f759-4e12-9273-c657f31fb4b7',
-    clicks:      'https://www.figma.com/api/mcp/asset/77e9db22-28f6-42c8-afe6-edd21acfd7f1',
-    impressions: 'https://www.figma.com/api/mcp/asset/4908c8b2-0667-4d08-a154-db77dab4d674',
-    ctr:         'https://www.figma.com/api/mcp/asset/5fcc513c-ae46-4238-9773-0dc1c2e4627f',
-    cpc1: 'https://www.figma.com/api/mcp/asset/8c86aeb8-4b7e-4c9c-8ae5-0a85e58eec63',
-    cpm1: 'https://www.figma.com/api/mcp/asset/9e0ea44b-f008-42c1-8967-e96ef912f952',
-    cpc2: 'https://www.figma.com/api/mcp/asset/2b5dfb86-ab84-42ea-8899-0df53d267851',
-    cpm2: 'https://www.figma.com/api/mcp/asset/bd500f2e-fa7e-4129-9eed-16ef822e1eaa',
-    cpc3: 'https://www.figma.com/api/mcp/asset/1303c689-f740-417c-972c-e02f4ba4b3f5',
-    cpm3: 'https://www.figma.com/api/mcp/asset/5d32fa68-6967-4675-81b7-a84608316596',
+    cost:        'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cost.svg',
+    clicks:      'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-clicks.svg',
+    impressions: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-impressions.svg',
+    ctr:         'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-ctr.svg',
+    cpc1: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpc1.svg',
+    cpm1: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpm1.svg',
+    cpc2: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpc2.svg',
+    cpm2: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpm2.svg',
+    cpc3: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpc3.svg',
+    cpm3: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpm3.svg',
   },
 };
 
