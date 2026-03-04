@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, startTransition } from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import LinearProgress from '@mui/material/LinearProgress';
 import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
@@ -21,6 +22,7 @@ export default function DashboardPage() {
   const [loadingType, setLoadingType] = useState(null); // null | 'single' | 'all'
   const [reports, setReports] = useState([]);
   const [expandedIds, setExpandedIds] = useState(new Set());
+  const [mountedIds, setMountedIds] = useState(new Set()); // IDs where HomesliceReport is in the DOM
   const [downloadProgress, setDownloadProgress] = useState(null); // null | { current, total, name }
   const [error, setError] = useState(null); // null | { status: number, message: string }
 
@@ -31,6 +33,10 @@ export default function DashboardPage() {
         next.delete(clientId);
       } else {
         next.add(clientId);
+        // Schedule mounting the heavy report content after the accordion header animates open
+        startTransition(() => {
+          setMountedIds((m) => new Set([...m, clientId]));
+        });
       }
       return next;
     });
@@ -41,6 +47,7 @@ export default function DashboardPage() {
     setLoadingType('single');
     setError(null);
     setReports([]);
+    setMountedIds(new Set());
     try {
       const res = await fetch(`${API_URL}/api/reports?client_id=${encodeURIComponent(input)}`);
       if (!res.ok) {
@@ -51,6 +58,8 @@ export default function DashboardPage() {
       const data = await res.json();
       setReports([data]);
       setExpandedIds(new Set([data.client_id]));
+      // Single result auto-expands — mount immediately (no need to defer)
+      setMountedIds(new Set([data.client_id]));
     } catch (err) {
       console.error('Fetch error:', err);
       setError({ status: 0, message: 'Unable to reach the server. Check your connection and try again.' });
@@ -63,6 +72,7 @@ export default function DashboardPage() {
     setLoadingType('all');
     setError(null);
     setReports([]);
+    setMountedIds(new Set());
     try {
       const res = await fetch(`${API_URL}/api/reports`);
       if (!res.ok) {
@@ -72,7 +82,7 @@ export default function DashboardPage() {
       }
       const data = await res.json();
       setReports(data);
-      setExpandedIds(new Set());
+      setExpandedIds(new Set()); // all collapsed; mountedIds stays empty
     } catch (err) {
       console.error('Fetch all error:', err);
       setError({ status: 0, message: 'Unable to reach the server. Check your connection and try again.' });
@@ -84,11 +94,12 @@ export default function DashboardPage() {
   async function handleDownloadAll() {
     if (!reports.length || downloadProgress) return;
 
-    // Remember which rows were open so we can restore afterward
     const previousExpandedIds = new Set(expandedIds);
+    const allIds = new Set(reports.map((r) => r.client_id));
 
-    // Expand every accordion so their DOM nodes are rendered and visible
-    setExpandedIds(new Set(reports.map((r) => r.client_id)));
+    // Expand and mount every report so their DOM nodes are rendered and visible
+    setExpandedIds(allIds);
+    setMountedIds(allIds);
 
     // Wait for React to commit the DOM update + MUI's expand transition (~300ms)
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -315,6 +326,7 @@ export default function DashboardPage() {
               onChange={() => toggleExpanded(report.client_id)}
               disableGutters
               elevation={0}
+              TransitionProps={{ timeout: { enter: 300, exit: 100 } }}
               sx={{
                 bgcolor: '#111d2b',
                 color: '#fff',
@@ -350,17 +362,23 @@ export default function DashboardPage() {
               </AccordionSummary>
 
               <AccordionDetails sx={{ p: 0 }}>
-                <Box
-                  sx={{
-                    mx: { xs: 1, md: 3 },
-                    mb: 3,
-                    borderRadius: 3,
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-                  }}
-                >
-                  <HomesliceReport data={report} />
-                </Box>
+                {mountedIds.has(report.client_id) ? (
+                  <Box
+                    sx={{
+                      mx: { xs: 1, md: 3 },
+                      mb: 3,
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+                    }}
+                  >
+                    <HomesliceReport data={report} />
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                    <CircularProgress sx={{ color: '#81bbe6' }} />
+                  </Box>
+                )}
               </AccordionDetails>
             </Accordion>
           ))}
