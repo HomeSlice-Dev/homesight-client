@@ -199,7 +199,8 @@ function ImageCardRow({ ads = [], height = 200 }) {
             key={i}
             onClick={() => setLightbox({ src: ad.image_url, alt: ad.campaign_name || '' })}
             sx={{
-              flex: { xs: '1 1 calc(50% - 6px)', sm: 1 },
+              flex: '0 0 auto',
+              width: { xs: 'calc(50% - 6px)', sm: 'calc(25% - 6px)' },
               bgcolor: '#d9d9d9',
               borderRadius: { xs: 3, md: 4 },
               height,
@@ -525,7 +526,7 @@ export default function HomesliceReport({ data }) {
 
           <Box
             component="img"
-            src={data.pages?.cover?.logo_url ?? ASSETS.logo}
+            src={data.pages?.cover?.logo_url ?? ASSETS.homeslice}
             alt={data.display_name}
             sx={{
               display: 'block',
