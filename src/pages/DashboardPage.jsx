@@ -15,7 +15,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import JSZip from 'jszip';
 import HomesliceReport from '../HomesliceReport';
 import { elementToPdfBlob, safePdfFilename, downloadBlob } from '../utils/pdfUtils';
-import { API_URL } from '../config';
+import { apiFetch } from '../utils/api';
 
 export default function DashboardPage() {
   const [input, setInput] = useState('');
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     setReports([]);
     setMountedIds(new Set());
     try {
-      const res = await fetch(`${API_URL}/api/reports?client_id=${encodeURIComponent(input)}`);
+      const res = await apiFetch(`/api/reports?client_id=${encodeURIComponent(input)}`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setError({ status: res.status, message: body.detail || body.message || 'Something went wrong.' });
@@ -74,7 +74,7 @@ export default function DashboardPage() {
     setReports([]);
     setMountedIds(new Set());
     try {
-      const res = await fetch(`${API_URL}/api/reports`);
+      const res = await apiFetch(`/api/reports`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setError({ status: res.status, message: body.detail || body.message || 'Something went wrong.' });
