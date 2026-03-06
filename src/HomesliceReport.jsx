@@ -46,7 +46,7 @@ const R2 = import.meta.env.DEV
 const ASSETS = {
   bgMain:     reportBg,
   logo:       'https://www.figma.com/api/mcp/asset/aa7fb38c-0b35-4b90-9622-7d52968ec53f',
-  screenshot: digialLogo,
+  screenshot: digitalLogo,
   homeslice:  homesliceLogo,
   icons: {
     cost:        R2('icon-cost.svg'),
