@@ -32,22 +32,30 @@ import { DataGrid } from '@mui/x-data-grid/DataGrid';
 //   },
 // };
 
+// In dev, route R2 assets through the Vite proxy (/r2-proxy → R2 bucket) so
+// html2canvas can fetch them without hitting CORS restrictions.
+// In production, use the direct R2 URL — you must add a CORS policy to the
+// R2 bucket allowing your production domain (see README / Cloudflare dashboard).
+const R2 = import.meta.env.DEV
+  ? (path) => `/r2-proxy/${path}`
+  : (path) => `https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/${path}`;
+
 const ASSETS = {
-  bgMain:     'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/4b61416a-5e88-4cc2-bd6f-c848ee76ce2b.png',
+  bgMain:     R2('4b61416a-5e88-4cc2-bd6f-c848ee76ce2b.png'),
   logo:       'https://www.figma.com/api/mcp/asset/aa7fb38c-0b35-4b90-9622-7d52968ec53f',
-  screenshot: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/5676c863-c126-4324-a818-6907fc66e2e6.png',
-  homeslice:  'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/homeslice-logo.svg',
+  screenshot: R2('5676c863-c126-4324-a818-6907fc66e2e6.png'),
+  homeslice:  R2('homeslice-logo.svg'),
   icons: {
-    cost:        'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cost.svg',
-    clicks:      'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-clicks.svg',
-    impressions: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-impressions.svg',
-    ctr:         'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-ctr.svg',
-    cpc1: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpc1.svg',
-    cpm1: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpm1.svg',
-    cpc2: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpc2.svg',
-    cpm2: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpm2.svg',
-    cpc3: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpc3.svg',
-    cpm3: 'https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/icon-cpm3.svg',
+    cost:        R2('icon-cost.svg'),
+    clicks:      R2('icon-clicks.svg'),
+    impressions: R2('icon-impressions.svg'),
+    ctr:         R2('icon-ctr.svg'),
+    cpc1:        R2('icon-cpc1.svg'),
+    cpm1:        R2('icon-cpm1.svg'),
+    cpc2:        R2('icon-cpc2.svg'),
+    cpm2:        R2('icon-cpm2.svg'),
+    cpc3:        R2('icon-cpc3.svg'),
+    cpm3:        R2('icon-cpm3.svg'),
   },
 };
 
@@ -88,6 +96,7 @@ function MetricItem({ icon, label, value }) {
         component="img"
         src={icon}
         alt=""
+        crossOrigin="anonymous"
         sx={{
           width: { xs: 28, md: 40 },
           height: { xs: 28, md: 40 },
@@ -368,7 +377,7 @@ function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts })
 }
 
 // ─── Root report ──────────────────────────────────────────────────────────────
-export default function HomesliceReport({ data }) {
+export default function HomesliceReport({ data, hideFab = false }) {
   const { icons } = ASSETS;
 
   if (!data) return null;
@@ -464,6 +473,7 @@ export default function HomesliceReport({ data }) {
         component="img"
         src={ASSETS.bgMain}
         alt=""
+        crossOrigin="anonymous"
         sx={{
           position: 'absolute',
           top: 0,
@@ -505,12 +515,14 @@ export default function HomesliceReport({ data }) {
               component="img"
               src={ASSETS.homeslice}
               alt="Homeslice"
+              crossOrigin="anonymous"
               sx={{ height: '100px', width: '100px', display: 'block' }}
             />
             <Box
               component="img"
               src={ASSETS.screenshot}
               alt=""
+              crossOrigin="anonymous"
               sx={{ height: { xs: 44, md: 70 }, width: 'auto', display: 'block' }}
             />
           </Box>
@@ -533,20 +545,26 @@ export default function HomesliceReport({ data }) {
             sx={{
               fontFamily: FONT,
               fontWeight: 400,
-              fontSize: { xs: '1rem', sm: '1.6rem', md: '2.8rem', lg: '4.375rem' },
+              fontSize: { xs: '0.7rem', sm: '1rem', md: '1.5rem', lg: '2rem' },
               color: '#fff',
               textTransform: 'uppercase',
               mt: 0.5,
               mb: { xs: 3, md: 5 },
             }}
           >
-            {data.month_year}
+            {(() => {
+              const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+              return data.date_start && data.date_end
+                ? `${fmt(data.date_start)} – ${fmt(data.date_end)}`
+                : fmt(data.date_start) || fmt(data.date_end) || '';
+            })()}
           </Typography>
 
           <Box
             component="img"
             src={data.pages?.cover?.logo_url ?? ASSETS.homeslice}
             alt={data.display_name}
+            crossOrigin="anonymous"
             sx={{
               display: 'block',
               mx: 'auto',
@@ -584,20 +602,22 @@ export default function HomesliceReport({ data }) {
       </Box>
 
       {/* ── SAVE AS PDF ─────────────────────────────────────────────────── */}
-      <Fab
-        color="primary"
-        title={saving ? 'Generating PDF…' : 'Save as PDF'}
-        onClick={handleSavePdf}
-        disabled={saving}
-        sx={{
-          position: 'fixed',
-          bottom: 28,
-          right: 28,
-          '@media print': { display: 'none' },
-        }}
-      >
-        {saving ? <CircularProgress size={24} color="inherit" /> : <PictureAsPdfIcon />}
-      </Fab>
+      {!hideFab && (
+        <Fab
+          color="primary"
+          title={saving ? 'Generating PDF…' : 'Save as PDF'}
+          onClick={handleSavePdf}
+          disabled={saving}
+          sx={{
+            position: 'fixed',
+            bottom: 28,
+            right: 28,
+            '@media print': { display: 'none' },
+          }}
+        >
+          {saving ? <CircularProgress size={24} color="inherit" /> : <PictureAsPdfIcon />}
+        </Fab>
+      )}
 
     </Box>
   );

@@ -1,0 +1,187 @@
+{
+  "report_id": "unsaved report",
+  "report_name": "test_report",
+  "generated_at": "2026-03-05 14:26:38",
+  "pages": {
+    "cover": {
+      "page_title": "Digital Marketing Report",
+      "customer_name": "Splash City-RC",
+      "logo_url": null,
+      "cards": {
+        "total_cost": 703.23,
+        "total_clicks": 1337,
+        "total_impressions": 159695,
+        "total_conversions": 0,
+        "total_cpc": 0.53,
+        "total_cpm": 4.4,
+        "total_ctr": 0.84
+      },
+      "chart_data": [
+        {
+          "date": "2026-02-14",
+          "gross": 116.32,
+          "clicks": 169,
+          "impressions": 18663,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-15",
+          "gross": 63.74,
+          "clicks": 108,
+          "impressions": 15202,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-16",
+          "gross": 48.77,
+          "clicks": 99,
+          "impressions": 13730,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-17",
+          "gross": 59.09,
+          "clicks": 130,
+          "impressions": 15667,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-18",
+          "gross": 67.09,
+          "clicks": 134,
+          "impressions": 15132,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-19",
+          "gross": 71.8,
+          "clicks": 141,
+          "impressions": 17797,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-20",
+          "gross": 70.86,
+          "clicks": 126,
+          "impressions": 18407,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-21",
+          "gross": 64.86,
+          "clicks": 141,
+          "impressions": 14624,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-22",
+          "gross": 58.87,
+          "clicks": 129,
+          "impressions": 14195,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-23",
+          "gross": 20.89,
+          "clicks": 57,
+          "impressions": 6542,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-24",
+          "gross": 36.46,
+          "clicks": 65,
+          "impressions": 4717,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-25",
+          "gross": 8.53,
+          "clicks": 18,
+          "impressions": 1802,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-26",
+          "gross": 8.65,
+          "clicks": 9,
+          "impressions": 2051,
+          "conversions": 0
+        },
+        {
+          "date": "2026-02-27",
+          "gross": 7.3,
+          "clicks": 11,
+          "impressions": 1166,
+          "conversions": 0
+        }
+      ]
+    },
+    "social": null,
+    "display": {
+      "page_title": "Display Ads",
+      "cards": {
+        "total_cost": 703.23,
+        "total_clicks": 1337,
+        "total_impressions": 159695,
+        "total_conversions": 0,
+        "total_cpc": 0.53,
+        "total_cpm": 4.4,
+        "total_ctr": 0.84
+      },
+      "campaign_table": [
+        {
+          "campaign": "Sioux City Spring 2026 Display",
+          "cost": 703.234,
+          "clicks": 1337,
+          "impressions": 159695,
+          "conversions": 0,
+          "cpc": 0.53,
+          "cpm": 4.4,
+          "ctr": 0.84
+        }
+      ],
+      "ad_media": [
+        {
+          "ad_id": 796285257032,
+          "image_url": null,
+          "campaign_name": "Sioux City Spring 2026 Display",
+          "impressions": 2955,
+          "clicks": 18
+        },
+        {
+          "ad_id": 796174925481,
+          "image_url": "https://tpc.googlesyndication.com/simgad/6436184764497748899",
+          "campaign_name": "Sioux City Spring 2026 Display",
+          "impressions": 2339,
+          "clicks": 13
+        },
+        {
+          "ad_id": 796285181489,
+          "image_url": "https://tpc.googlesyndication.com/simgad/1582544991764722028",
+          "campaign_name": "Sioux City Spring 2026 Display",
+          "impressions": 129,
+          "clicks": 4
+        },
+        {
+          "ad_id": 796174925436,
+          "image_url": "https://tpc.googlesyndication.com/simgad/80113444648413027",
+          "campaign_name": "Sioux City Spring 2026 Display",
+          "impressions": 88,
+          "clicks": 3
+        },
+        {
+          "ad_id": 796174925442,
+          "image_url": "https://tpc.googlesyndication.com/simgad/14104469688745238732",
+          "campaign_name": "Sioux City Spring 2026 Display",
+          "impressions": 26,
+          "clicks": 3
+        }
+      ]
+    },
+    "search": null,
+    "website": null,
+    "youtube": null,
+    "performance_max": null
+  }
+}
