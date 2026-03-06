@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import DashboardPage from './pages/DashboardPage';
+import CustomReportsPage from './pages/CustomReportsPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 
@@ -18,8 +19,9 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<LayoutShell />}>
-              <Route path="/"        element={<DashboardPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/"               element={<DashboardPage />} />
+              <Route path="/custom-reports" element={<CustomReportsPage />} />
+              <Route path="/profile"        element={<ProfilePage />} />
               <Route path="*"        element={<Navigate to="/" replace />} />
             </Route>
           </Route>

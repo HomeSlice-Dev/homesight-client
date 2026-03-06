@@ -20,6 +20,7 @@ import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
+import TuneIcon from '@mui/icons-material/Tune';
 import { useAuth } from '../context/AuthContext';
 
 const DRAWER_WIDTH = 240;
@@ -79,7 +80,11 @@ export default function Layout({ children }) {
   const { pathname }                = useLocation();
   const { isAuthenticated, logout } = useAuth();
 
-  const activePage = pathname.startsWith('/profile') ? 'profile' : 'dashboard';
+  const activePage = pathname.startsWith('/profile')
+    ? 'profile'
+    : pathname.startsWith('/custom-reports')
+    ? 'custom-reports'
+    : 'dashboard';
 
   function handleLoginToggle() {
     if (isAuthenticated) {
@@ -121,7 +126,7 @@ export default function Layout({ children }) {
               textTransform: 'uppercase',
             }}
           >
-            {activePage === 'dashboard' ? 'Dashboard' : 'Profile'}
+            {activePage === 'dashboard' ? 'Dashboard' : activePage === 'custom-reports' ? 'Custom Reports' : 'Profile'}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -194,6 +199,13 @@ export default function Layout({ children }) {
               expanded={open}
             />
             <NavItem
+              label="Custom Reports"
+              icon={<TuneIcon />}
+              active={activePage === 'custom-reports'}
+              onClick={() => navigate('/custom-reports')}
+              expanded={open}
+            />
+            <NavItem
               label="Profile"
               icon={<PersonIcon />}
               active={activePage === 'profile'}
@@ -222,7 +234,7 @@ export default function Layout({ children }) {
           flexGrow: 1,
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
+          height: '100vh',
           bgcolor: '#0d1b2a',
           overflow: 'hidden',
         }}

@@ -1,229 +1,113 @@
-import { useState, useRef, startTransition } from 'react';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import Autocomplete from '@mui/material/Autocomplete';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
-import LinearProgress from '@mui/material/LinearProgress';
-import Skeleton from '@mui/material/Skeleton';
+import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import DownloadIcon from '@mui/icons-material/Download';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import SearchIcon from '@mui/icons-material/Search';
-import JSZip from 'jszip';
-import HomesliceReport from '../HomesliceReport';
-import { elementToPdfBlob, safePdfFilename, downloadBlob } from '../utils/pdfUtils';
+import { DataGrid } from '@mui/x-data-grid';
+import ReportDrawer from '../components/ReportDrawer';
 import { apiFetch } from '../utils/api';
 
+// ── Formatters ────────────────────────────────────────────────────────────────
+function fmtCurrency(v) {
+  return `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+function fmtNumber(v) {
+  return Number(v).toLocaleString('en-US');
+}
+function fmtPercent(v) {
+  return `${Number(v).toFixed(2)}%`;
+}
+
+const CLIENT_COLUMNS = [
+  { field: 'display_name',      headerName: 'Client',       flex: 2, minWidth: 180 },
+  { field: 'month_year',        headerName: 'Period',        flex: 1, minWidth: 120 },
+  { field: 'total_cost',        headerName: 'Total Cost',    flex: 1, minWidth: 130, valueFormatter: (v) => fmtCurrency(v) },
+  { field: 'total_clicks',      headerName: 'Clicks',        flex: 1, minWidth: 100, valueFormatter: (v) => fmtNumber(v) },
+  { field: 'total_impressions', headerName: 'Impressions',   flex: 1, minWidth: 130, valueFormatter: (v) => fmtNumber(v) },
+  { field: 'total_ctr',         headerName: 'CTR',           flex: 1, minWidth: 90,  valueFormatter: (v) => fmtPercent(v) },
+];
+
 export default function DashboardPage() {
-  // Client autocomplete state
-  const [searchQuery,    setSearchQuery]    = useState('');
-  const [selectedClient, setSelectedClient] = useState(null); // { client_id, display_name }
-  const [clientOptions,  setClientOptions]  = useState([]);
-  const [clientsLoading, setClientsLoading] = useState(false);
-  const debounceRef = useRef(null);
+  const [filterText,     setFilterText]     = useState('');
+  const [reports,        setReports]        = useState([]);
+  const [loading,        setLoading]        = useState(false);
+  const [error,          setError]          = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [drawerOpen,     setDrawerOpen]     = useState(false);
+  const [drawerLoading,  setDrawerLoading]  = useState(false);
+  const [selectedRowId,  setSelectedRowId]  = useState(null);
 
-  const [loadingType,      setLoadingType]      = useState(null); // null | 'single' | 'all'
-  const [reports,          setReports]          = useState([]);
-  const [expandedIds,      setExpandedIds]      = useState(new Set());
-  const [mountedIds,       setMountedIds]       = useState(new Set());
-  const [downloadProgress, setDownloadProgress] = useState(null); // null | { current, total, name }
-  const [error,            setError]            = useState(null); // null | { status, message }
+  useEffect(() => { fetchAll(); }, []);
 
-  // ── Autocomplete handlers ─────────────────────────────────────────────────
-
-  function handleSearchInput(_, newValue) {
-    setSearchQuery(newValue);
-    setSelectedClient(null);
-    clearTimeout(debounceRef.current);
-
-    if (!newValue.trim()) {
-      setClientOptions([]);
-      return;
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setClientsLoading(true);
-      try {
-        const res = await apiFetch(`/api/clients?q=${encodeURIComponent(newValue)}`);
-        if (res.ok) setClientOptions(await res.json());
-      } catch (err) {
-        console.error('Client search error:', err);
-      } finally {
-        setClientsLoading(false);
-      }
-    }, 300);
-  }
-
-  function handleClientSelect(_, newValue) {
-    setSelectedClient(newValue);
-    if (newValue) handleFetch(newValue.display_name);
-  }
-
-  // ── Report fetch handlers ─────────────────────────────────────────────────
-
-  async function handleFetch(displayName) {
-    const name = displayName ?? selectedClient?.display_name;
-    if (!name) return;
-    setLoadingType('single');
+  async function fetchAll() {
+    setLoading(true);
     setError(null);
-    setReports([]);
-    setMountedIds(new Set());
     try {
-      const res = await apiFetch(`/api/reports?display_name=${encodeURIComponent(name)}`);
+      const res = await apiFetch('/api/reports');
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setError({ status: res.status, message: body.detail || body.message || 'Something went wrong.' });
         return;
       }
-      const data = await res.json();
-      setReports([data]);
-      setExpandedIds(new Set([data.client_id]));
-      setMountedIds(new Set([data.client_id]));
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError({ status: 0, message: 'Unable to reach the server. Check your connection and try again.' });
-    } finally {
-      setLoadingType(null);
-    }
-  }
-
-  async function handleFetchAll() {
-    setLoadingType('all');
-    setError(null);
-    setReports([]);
-    setMountedIds(new Set());
-    try {
-      const res = await apiFetch(`/api/reports`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError({ status: res.status, message: body.detail || body.message || 'Something went wrong.' });
-        return;
-      }
-      const data = await res.json();
-      setReports(data);
-      setExpandedIds(new Set());
+      setReports(await res.json());
     } catch (err) {
       console.error('Fetch all error:', err);
       setError({ status: 0, message: 'Unable to reach the server. Check your connection and try again.' });
     } finally {
-      setLoadingType(null);
+      setLoading(false);
     }
   }
 
-  async function handleDownloadAll() {
-    if (!reports.length || downloadProgress) return;
+  async function handleRowClick(params) {
+    const summary = reports[params.id];
+    if (!summary) return;
 
-    const previousExpandedIds = new Set(expandedIds);
-    const allIds = new Set(reports.map((r) => r.client_id));
-
-    setExpandedIds(allIds);
-    setMountedIds(allIds);
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const images = document.querySelectorAll('[id^="homesight-report-"] img');
-    await Promise.all(
-      Array.from(images).map((img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise((resolve) => {
-              img.addEventListener('load', resolve, { once: true });
-              img.addEventListener('error', resolve, { once: true });
-            })
-      )
-    );
-
-    const zip = new JSZip();
-
-    for (let i = 0; i < reports.length; i++) {
-      const report = reports[i];
-      setDownloadProgress({ current: i + 1, total: reports.length, name: report.display_name });
-
-      const el = document.getElementById(`homesight-report-${report.client_id}`);
-      if (!el) continue;
-
-      try {
-        const blob = await elementToPdfBlob(el);
-        zip.file(safePdfFilename(report.display_name), blob);
-      } catch (err) {
-        console.error(`PDF failed for ${report.display_name}:`, err);
-      }
+    setSelectedRowId(params.id);
+    setDrawerOpen(true);
+    setSelectedReport(null);
+    setDrawerLoading(true);
+    try {
+      const res = await apiFetch(`/api/reports?display_name=${encodeURIComponent(summary.display_name)}`);
+      if (res.ok) setSelectedReport(await res.json());
+    } catch (err) {
+      console.error('Report fetch error:', err);
+    } finally {
+      setDrawerLoading(false);
     }
-
-    setExpandedIds(previousExpandedIds);
-    setDownloadProgress(null);
-
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    downloadBlob(zipBlob, 'HomeSight_Reports.zip');
   }
 
-  function toggleExpanded(clientId) {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(clientId)) {
-        next.delete(clientId);
-      } else {
-        next.add(clientId);
-        startTransition(() => {
-          setMountedIds((m) => new Set([...m, clientId]));
-        });
-      }
-      return next;
-    });
+  function handleCloseDrawer() {
+    setDrawerOpen(false);
+    setSelectedRowId(null);
   }
 
-  function handleReset() {
-    setError(null);
-    setReports([]);
-    setSearchQuery('');
-    setSelectedClient(null);
-    setClientOptions([]);
-  }
+  // Build flat rows for the DataGrid — use array index as id so that multiple
+  // reports per client (different months share the same client_id) each get a unique row.
+  const rows = reports.map((r, i) => ({
+    id:                i,
+    display_name:      r.display_name,
+    month_year:        r.month_year,
+    total_cost:        r.pages?.cover?.cards?.total_cost        ?? 0,
+    total_clicks:      r.pages?.cover?.cards?.total_clicks      ?? 0,
+    total_impressions: r.pages?.cover?.cards?.total_impressions ?? 0,
+    total_ctr:         r.pages?.cover?.cards?.total_ctr         ?? 0,
+  }));
 
-  const isLoading    = loadingType !== null;
-  const isDownloading = downloadProgress !== null;
+  const filteredRows = filterText.trim()
+    ? rows.filter((r) => r.display_name.toLowerCase().includes(filterText.toLowerCase()))
+    : rows;
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {/* ── Action bar ── */}
-      <Box className="print-hide" sx={{ px: 3, pt: 3, pb: 3 }}>
-
-        {/* Header row: title + All Clients */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.4rem', letterSpacing: 0.5 }}>
-            Client Report Lookup
-          </Typography>
-          <Button
-            variant="outlined"
-            startIcon={
-              loadingType === 'all'
-                ? <CircularProgress size={14} sx={{ color: 'inherit' }} />
-                : <PeopleOutlineIcon fontSize="small" />
-            }
-            onClick={handleFetchAll}
-            disabled={isLoading || isDownloading}
-            sx={{
-              whiteSpace: 'nowrap',
-              borderColor: 'rgba(255,255,255,0.2)',
-              color: 'rgba(255,255,255,0.65)',
-              fontSize: '0.8rem',
-              px: 2,
-              '&:hover': { borderColor: '#81bbe6', color: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
-              '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
-            }}
-          >
-            {loadingType === 'all' ? 'Loading…' : 'All Clients'}
-          </Button>
-        </Box>
+      <Box className="print-hide" sx={{ px: 3, pt: 3, pb: 3, flexShrink: 0 }}>
 
         {/* Toolbar surface */}
         <Box
@@ -239,93 +123,34 @@ export default function DashboardPage() {
             flexWrap: 'wrap',
           }}
         >
-          {/* ── Client name autocomplete ── */}
-          <Autocomplete
-            inputValue={searchQuery}
-            onInputChange={handleSearchInput}
-            value={selectedClient}
-            onChange={handleClientSelect}
-            options={clientOptions}
-            getOptionLabel={(opt) => opt.display_name}
-            isOptionEqualToValue={(opt, val) => opt.client_id === val.client_id}
-            loading={clientsLoading}
-            filterOptions={(x) => x} // server-side filtering — don't filter client-side
-            noOptionsText={
-              <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                {searchQuery.trim() ? 'No clients found' : 'Start typing to search'}
-              </Typography>
-            }
-            loadingText={
-              <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                Searching…
-              </Typography>
-            }
+          {/* ── Client name filter ── */}
+          <TextField
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            placeholder="Filter by client name…"
+            size="small"
             slotProps={{
-              paper: {
-                sx: {
-                  bgcolor: '#1a2840',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                  '& .MuiAutocomplete-option': {
-                    color: '#fff',
-                    fontSize: '0.875rem',
-                    '&[aria-selected="true"]': { bgcolor: 'rgba(129,187,230,0.2) !important' },
-                    '&.Mui-focused': { bgcolor: 'rgba(255,255,255,0.06) !important' },
-                  },
-                },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '1.1rem' }} />
+                  </InputAdornment>
+                ),
               },
             }}
-            sx={{ flex: '1 1 200px', maxWidth: 300 }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                placeholder="Search client name…"
-                size="small"
-                slotProps={{
-                  input: {
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {clientsLoading && <CircularProgress size={14} sx={{ color: '#81bbe6', mr: 0.5 }} />}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  },
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    color: '#fff',
-                    bgcolor: 'rgba(255,255,255,0.04)',
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
-                    '&:hover fieldset': { borderColor: '#81bbe6' },
-                    '&.Mui-focused fieldset': { borderColor: '#81bbe6' },
-                    '& .MuiAutocomplete-endAdornment .MuiIconButton-root': { color: 'rgba(255,255,255,0.3)' },
-                  },
-                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' },
-                }}
-              />
-            )}
-          />
-          <Button
-            variant="contained"
-            onClick={() => handleFetch()}
-            disabled={isLoading || isDownloading || !selectedClient}
-            startIcon={
-              loadingType === 'single'
-                ? <CircularProgress size={14} color="inherit" />
-                : <SearchIcon fontSize="small" />
-            }
             sx={{
-              whiteSpace: 'nowrap',
-              bgcolor: '#1c5784',
-              '&:hover': { bgcolor: '#81bbe6' },
-              '&.Mui-disabled': { bgcolor: 'rgba(28,87,132,0.35)', color: 'rgba(255,255,255,0.3)' },
-              px: 2.5,
-              fontSize: '0.875rem',
+              flex: '1 1 200px',
+              maxWidth: 300,
+              '& .MuiOutlinedInput-root': {
+                color: '#fff',
+                bgcolor: 'rgba(255,255,255,0.04)',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
+                '&:hover fieldset': { borderColor: '#81bbe6' },
+                '&.Mui-focused fieldset': { borderColor: '#81bbe6' },
+              },
+              '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' },
             }}
-          >
-            {loadingType === 'single' ? 'Searching…' : 'Search'}
-          </Button>
+          />
 
           <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)', mx: 0.5 }} />
 
@@ -374,78 +199,19 @@ export default function DashboardPage() {
             </span>
           </Tooltip>
 
-          {/* ── Spacer ── */}
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* ── Download All — right-anchored, visible when multiple reports loaded ── */}
-          {reports.length > 1 && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<DownloadIcon fontSize="small" />}
-              onClick={handleDownloadAll}
-              disabled={isLoading || isDownloading}
-              sx={{
-                whiteSpace: 'nowrap',
-                borderColor: 'rgba(129,187,230,0.4)',
-                color: '#81bbe6',
-                fontSize: '0.8rem',
-                px: 2,
-                '&:hover': { borderColor: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
-                '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
-              }}
-            >
-              {isDownloading
-                ? `${downloadProgress.current} / ${downloadProgress.total}`
-                : 'Download All PDFs'}
-            </Button>
+          {/* ── Row count indicator ── */}
+          {!loading && reports.length > 0 && (
+            <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.78rem' }}>
+              {filteredRows.length} of {reports.length} clients
+            </Typography>
           )}
         </Box>
-
-        {/* Progress bar — below toolbar when generating PDFs */}
-        {isDownloading && (
-          <Box sx={{ mt: 1.5, maxWidth: 520 }}>
-            <LinearProgress
-              variant="determinate"
-              value={(downloadProgress.current / downloadProgress.total) * 100}
-              sx={{
-                borderRadius: 1,
-                bgcolor: 'rgba(255,255,255,0.08)',
-                '& .MuiLinearProgress-bar': { bgcolor: '#81bbe6' },
-              }}
-            />
-            <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', mt: 0.75 }}>
-              Generating PDF {downloadProgress.current} of {downloadProgress.total} — {downloadProgress.name}
-            </Typography>
-          </Box>
-        )}
       </Box>
 
-      {/* Skeleton loading rows */}
-      {isLoading && (
-        <Box sx={{ mx: { xs: 1, md: 3 }, mb: 4 }}>
-          {Array.from({ length: loadingType === 'single' ? 1 : 4 }).map((_, i) => (
-            <Box
-              key={i}
-              sx={{
-                bgcolor: '#111d2b',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-                px: 3,
-                py: 2,
-                '&:first-of-type': { borderRadius: '12px 12px 0 0' },
-                '&:last-of-type': { borderRadius: '0 0 12px 12px', borderBottom: 'none' },
-                '&:only-of-type': { borderRadius: '12px' },
-              }}
-            >
-              <Skeleton variant="text" width="40%" height={22} sx={{ bgcolor: 'rgba(255,255,255,0.08)', mb: 0.5 }} />
-              <Skeleton variant="text" width="20%" height={16} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
-            </Box>
-          ))}
-        </Box>
-      )}
-
-      {/* Error page */}
-      {error && !isLoading && (
+      {/* ── Error state ── */}
+      {error && !loading && (
         <Box
           sx={{
             display: 'flex',
@@ -471,7 +237,7 @@ export default function DashboardPage() {
           </Typography>
           <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.4rem', mb: 1 }}>
             {error.status === 404
-              ? 'Client Not Found'
+              ? 'Not Found'
               : error.status === 500
               ? 'Server Error'
               : error.status === 0
@@ -484,7 +250,7 @@ export default function DashboardPage() {
           <Button
             variant="outlined"
             startIcon={<ArrowBackIcon />}
-            onClick={handleReset}
+            onClick={fetchAll}
             sx={{
               borderColor: 'rgba(255,255,255,0.3)',
               color: 'rgba(255,255,255,0.8)',
@@ -492,79 +258,55 @@ export default function DashboardPage() {
               px: 4,
             }}
           >
-            Back to Dashboard
+            Retry
           </Button>
         </Box>
       )}
 
-      {/* Accordion client list */}
-      {reports.length > 0 && (
-        <Box sx={{ mx: { xs: 1, md: 3 }, mb: 4 }}>
-          {reports.map((report) => (
-            <Accordion
-              key={report.client_id}
-              expanded={expandedIds.has(report.client_id)}
-              onChange={() => toggleExpanded(report.client_id)}
-              disableGutters
-              elevation={0}
-              TransitionProps={{ timeout: { enter: 300, exit: 100 } }}
-              sx={{
-                bgcolor: '#111d2b',
-                color: '#fff',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-                '&:first-of-type': { borderRadius: '12px 12px 0 0' },
-                '&:last-of-type': {
-                  borderRadius: expandedIds.has(report.client_id) ? '0 0 0 0' : '0 0 12px 12px',
-                  borderBottom: 'none',
-                },
-                '&:only-of-type': {
-                  borderRadius: expandedIds.has(report.client_id) ? '12px 12px 0 0' : '12px',
-                },
-                '&::before': { display: 'none' },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon sx={{ color: '#81bbe6' }} />}
-                sx={{
-                  px: 3,
-                  py: 0.5,
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
-                  '& .MuiAccordionSummary-content': { my: 1.5 },
-                }}
-              >
-                <Box>
-                  <Typography sx={{ fontWeight: 600, fontSize: '1rem', lineHeight: 1.3 }}>
-                    {report.display_name}
-                  </Typography>
-                  <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', mt: 0.25 }}>
-                    {report.month_year}
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-
-              <AccordionDetails sx={{ p: 0 }}>
-                {mountedIds.has(report.client_id) ? (
-                  <Box
-                    sx={{
-                      mx: { xs: 1, md: 3 },
-                      mb: 3,
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                      boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-                    }}
-                  >
-                    <HomesliceReport data={report} />
-                  </Box>
-                ) : (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                    <CircularProgress sx={{ color: '#81bbe6' }} />
-                  </Box>
-                )}
-              </AccordionDetails>
-            </Accordion>
-          ))}
+      {/* ── DataGrid ── */}
+      {!error && (
+        <Box sx={{ flex: 1, minHeight: 0, mx: { xs: 1, md: 3 }, pb: 2 }}>
+          <DataGrid
+            rows={filteredRows}
+            columns={CLIENT_COLUMNS}
+            loading={loading}
+            onRowClick={handleRowClick}
+            getRowClassName={(params) => params.id === selectedRowId ? 'row-active' : ''}
+            disableRowSelectionOnClick
+            pageSizeOptions={[25, 50, 100]}
+            initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+            disableColumnMenu
+            sx={{
+              height: '100%',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 2,
+              color: '#fff',
+              bgcolor: '#111d2b',
+              '& .MuiDataGrid-columnHeader':          { bgcolor: '#0d1b2a', color: 'rgba(255,255,255,0.65)' },
+              '& .MuiDataGrid-columnHeaderTitle':     { fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.8 },
+              '& .MuiDataGrid-columnSeparator':       { display: 'none' },
+              '& .MuiDataGrid-cell':                  { borderColor: 'rgba(255,255,255,0.06)', color: '#fff' },
+              '& .MuiDataGrid-row':                   { cursor: 'pointer' },
+              '& .MuiDataGrid-row:hover':             { bgcolor: 'rgba(129,187,230,0.08)' },
+              '& .MuiDataGrid-row.row-active':        { bgcolor: 'rgba(255,255,255,0.07)' },
+              '& .MuiDataGrid-row.row-active:hover':  { bgcolor: 'rgba(129,187,230,0.1)' },
+              '& .MuiDataGrid-filler':                { bgcolor: 'transparent' },
+              '& .MuiDataGrid-scrollbarFiller':       { bgcolor: 'transparent' },
+              '& .MuiDataGrid-footerContainer':       { borderColor: 'rgba(255,255,255,0.08)' },
+              '& .MuiTablePagination-root':           { color: 'rgba(255,255,255,0.45)' },
+              '& .MuiTablePagination-selectIcon':     { color: 'rgba(255,255,255,0.45)' },
+              '& .MuiDataGrid-overlay':               { bgcolor: 'rgba(13,27,42,0.7)', color: 'rgba(255,255,255,0.45)' },
+            }}
+          />
         </Box>
       )}
+
+      <ReportDrawer
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+        report={selectedReport}
+        loading={drawerLoading}
+      />
     </Box>
   );
 }
