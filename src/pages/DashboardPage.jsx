@@ -27,7 +27,9 @@ function fmtPercent(v) {
 
 const CLIENT_COLUMNS = [
   { field: 'display_name',      headerName: 'Client',       flex: 2, minWidth: 180 },
-  { field: 'month_year',        headerName: 'Period',        flex: 1, minWidth: 120 },
+  { field: 'account_executive',      headerName: 'Account Executive',       flex: 2, minWidth: 180 },
+  { field: 'month_year',        headerName: 'Period',        flex: 1, minWidth: 160,
+    valueFormatter: (v) => v ? new Date(v + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '' },
   { field: 'total_cost',        headerName: 'Total Cost',    flex: 1, minWidth: 130, valueFormatter: (v) => fmtCurrency(v) },
   { field: 'total_clicks',      headerName: 'Clicks',        flex: 1, minWidth: 100, valueFormatter: (v) => fmtNumber(v) },
   { field: 'total_impressions', headerName: 'Impressions',   flex: 1, minWidth: 130, valueFormatter: (v) => fmtNumber(v) },
@@ -56,7 +58,9 @@ export default function DashboardPage() {
         setError({ status: res.status, message: body.detail || body.message || 'Something went wrong.' });
         return;
       }
-      setReports(await res.json());
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data : (data.reports ?? data.items ?? data.data ?? []);
+      setReports(arr);
     } catch (err) {
       console.error('Fetch all error:', err);
       setError({ status: 0, message: 'Unable to reach the server. Check your connection and try again.' });
@@ -67,6 +71,7 @@ export default function DashboardPage() {
 
   async function handleRowClick(params) {
     const summary = reports[params.id];
+    console.log('summary', summary)
     if (!summary) return;
 
     setSelectedRowId(params.id);
@@ -74,8 +79,12 @@ export default function DashboardPage() {
     setSelectedReport(null);
     setDrawerLoading(true);
     try {
-      const res = await apiFetch(`/api/reports?display_name=${encodeURIComponent(summary.display_name)}`);
-      if (res.ok) setSelectedReport(await res.json());
+      const res = await apiFetch(`/api/reports?display_name=${encodeURIComponent(summary.pages.cover.customer_name)}`);
+      if (res.ok) {
+        const json = await res.json();
+        const report = Array.isArray(json) ? json[0] : (json.reports?.[0] ?? json);
+        setSelectedReport(report);
+      }
     } catch (err) {
       console.error('Report fetch error:', err);
     } finally {
@@ -92,8 +101,9 @@ export default function DashboardPage() {
   // reports per client (different months share the same client_id) each get a unique row.
   const rows = reports.map((r, i) => ({
     id:                i,
-    display_name:      r.display_name,
-    month_year:        r.month_year,
+    display_name:      r.pages.cover.customer_name ?? '-',
+    account_executive: r.ae_name ?? '-',
+    month_year:        r.date_start ?? '-',
     total_cost:        r.pages?.cover?.cards?.total_cost        ?? 0,
     total_clicks:      r.pages?.cover?.cards?.total_clicks      ?? 0,
     total_impressions: r.pages?.cover?.cards?.total_impressions ?? 0,
