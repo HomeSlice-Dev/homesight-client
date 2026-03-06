@@ -11,6 +11,9 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { elementToPdfBlob, safePdfFilename, downloadBlob } from './utils/pdfUtils';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { DataGrid } from '@mui/x-data-grid/DataGrid';
+import reportBg from './assets/report-images/report-bg.png';
+import digitalLogo from './assets/report-images/digital-logo.png';
+import homesliceLogo from './assets/report-images/homeslicegroup (1).png';
 
 // Figma asset URLs — valid for ~7 days from generation
 // const ASSETS = {
@@ -41,10 +44,10 @@ const R2 = import.meta.env.DEV
   : (path) => `https://pub-633f8a68ce3b47509c3dc2e22ecfff28.r2.dev/${path}`;
 
 const ASSETS = {
-  bgMain:     R2('4b61416a-5e88-4cc2-bd6f-c848ee76ce2b.png'),
+  bgMain:     reportBg,
   logo:       'https://www.figma.com/api/mcp/asset/aa7fb38c-0b35-4b90-9622-7d52968ec53f',
-  screenshot: R2('5676c863-c126-4324-a818-6907fc66e2e6.png'),
-  homeslice:  R2('homeslice-logo.svg'),
+  screenshot: digialLogo,
+  homeslice:  homesliceLogo,
   icons: {
     cost:        R2('icon-cost.svg'),
     clicks:      R2('icon-clicks.svg'),
