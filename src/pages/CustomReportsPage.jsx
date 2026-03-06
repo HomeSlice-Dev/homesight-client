@@ -238,6 +238,7 @@ export default function CustomReportsPage() {
       const res = await apiFetch(`/api/save-custom-report?${params}`, { method: 'POST' });
       if (res.ok) {
         handleCloseReportDrawer();
+        handleCloseDrawer();
         fetchSavedReports();
       } else {
         const body = await res.json().catch(() => ({}));

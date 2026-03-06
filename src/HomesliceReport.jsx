@@ -545,14 +545,19 @@ export default function HomesliceReport({ data, hideFab = false }) {
             sx={{
               fontFamily: FONT,
               fontWeight: 400,
-              fontSize: { xs: '1rem', sm: '1.6rem', md: '2.8rem', lg: '4.375rem' },
+              fontSize: { xs: '0.7rem', sm: '1rem', md: '1.5rem', lg: '2rem' },
               color: '#fff',
               textTransform: 'uppercase',
               mt: 0.5,
               mb: { xs: 3, md: 5 },
             }}
           >
-            {data.month_year}
+            {(() => {
+              const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+              return data.date_start && data.date_end
+                ? `${fmt(data.date_start)} – ${fmt(data.date_end)}`
+                : fmt(data.date_start) || fmt(data.date_end) || '';
+            })()}
           </Typography>
 
           <Box
