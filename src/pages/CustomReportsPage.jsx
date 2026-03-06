@@ -22,9 +22,10 @@ import { elementToPdfBlob, safePdfFilename, downloadBlob } from '../utils/pdfUti
 import { apiFetch } from '../utils/api';
 
 const COLUMNS = [
-  { field: 'report_name',   headerName: 'Report Name',   flex: 2, minWidth: 200 },
-  { field: 'custom_date',   headerName: 'Custom Date',   flex: 1, minWidth: 140 },
-  { field: 'campaign_type', headerName: 'Campaign Type', flex: 1, minWidth: 160 },
+  { field: 'name',       headerName: 'Report Name', flex: 2, minWidth: 200 },
+  { field: 'status',     headerName: 'Status',      flex: 1, minWidth: 120 },
+  { field: 'created_at', headerName: 'Created',     flex: 1, minWidth: 160,
+    valueFormatter: (value) => value ? new Date(value).toLocaleString() : '' },
 ];
 
 const CAMPAIGN_COLUMNS = [
@@ -81,12 +82,15 @@ export default function CustomReportsPage() {
   const [selectedCampaignIds, setSelectedCampaignIds] = useState([]);
 
   // Create-drawer report state
-  const [reportId,     setReportId]     = useState(null);
-  const [report,       setReport]       = useState(null);
-  const [fetchLoading, setFetchLoading] = useState(false);
-  const [error,        setError]        = useState(null);
-  const [pdfSaving,    setPdfSaving]    = useState(false);
-  const [saveLoading,  setSaveLoading]  = useState(false);
+  const [reportId,          setReportId]          = useState(null);
+  const [report,            setReport]            = useState(null);
+  const [reportDrawerOpen,  setReportDrawerOpen]  = useState(false);
+  const [fetchLoading,      setFetchLoading]      = useState(false);
+  const [error,             setError]             = useState(null);
+  const [pdfSaving,         setPdfSaving]         = useState(false);
+  const [saveLoading,       setSaveLoading]       = useState(false);
+  const [reportNameInput,   setReportNameInput]   = useState('');
+  const [saveError,         setSaveError]         = useState(null);
 
   // View-drawer state (clicking a saved row)
   const [viewDrawerOpen,    setViewDrawerOpen]    = useState(false);
@@ -106,7 +110,7 @@ export default function CustomReportsPage() {
       const res = await apiFetch('/api/custom-report');
       if (res.ok) {
         const data = await res.json();
-        setCustomReports(data.map((r) => ({ ...r, id: r.report_id })));
+        setCustomReports(data.map((r, i) => ({ ...r, id: r.report_id ?? r.id ?? i })));
       }
     } catch (err) {
       console.error('Fetch saved reports error:', err);
@@ -181,13 +185,22 @@ export default function CustomReportsPage() {
         setError(body.detail || body.message || `Error ${res.status}`);
         return;
       }
-      setReport(await res.json());
+      const data = await res.json();
+      setReport(data);
+      setReportDrawerOpen(true);
     } catch (err) {
       console.error('Report fetch error:', err);
       setError('Unable to reach the server. Check your connection and try again.');
     } finally {
       setFetchLoading(false);
     }
+  }
+
+  function handleCloseReportDrawer() {
+    setReportDrawerOpen(false);
+    setReport(null);
+    setReportNameInput('');
+    setSaveError(null);
   }
 
   // ── Save as PDF ────────────────────────────────────────────────────────────
@@ -207,11 +220,13 @@ export default function CustomReportsPage() {
   // ── Save custom report to backend ─────────────────────────────────────────
   async function handleSaveReport() {
     if (!report || saveLoading) return;
-    const name = selectedName || inputValue.trim();
+    setSaveError(null);
+    const customName = reportNameInput.trim();
+    const fallbackName = selectedName || inputValue.trim();
     const dateLabel = startMonth && endMonth
       ? `${startMonth} – ${endMonth}`
       : startMonth || endMonth || '';
-    const reportName = [name, dateLabel].filter(Boolean).join(' · ');
+    const reportName = customName || [fallbackName, dateLabel].filter(Boolean).join(' · ');
 
     setSaveLoading(true);
     try {
@@ -222,11 +237,15 @@ export default function CustomReportsPage() {
       selectedCampaignIds.forEach((id) => params.append('campaign_id', id));
       const res = await apiFetch(`/api/save-custom-report?${params}`, { method: 'POST' });
       if (res.ok) {
-        setDrawerOpen(false);
+        handleCloseReportDrawer();
         fetchSavedReports();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setSaveError(body.detail || body.message || `Error ${res.status}`);
       }
     } catch (err) {
       console.error('Save report error:', err);
+      setSaveError('Unable to reach the server. Check your connection and try again.');
     } finally {
       setSaveLoading(false);
     }
@@ -239,7 +258,7 @@ export default function CustomReportsPage() {
     setSelectedRowId(params.id);
     setViewDrawerOpen(true);
     setViewReport(null);
-    setViewReportTitle(row.report_name ?? '');
+    setViewReportTitle(row.name ?? '');
     setViewDrawerLoading(true);
     try {
       const res = await apiFetch(`/api/custom-report?report_id=${row.id}`);
@@ -261,6 +280,7 @@ export default function CustomReportsPage() {
     setDrawerOpen(true);
     setReportId(null);
     setReport(null);
+    setReportDrawerOpen(false);
     setError(null);
     setInputValue('');
     setSelectedName(null);
@@ -276,6 +296,8 @@ export default function CustomReportsPage() {
 
   function handleCloseDrawer() {
     setDrawerOpen(false);
+    setReportDrawerOpen(false);
+    setReport(null);
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -426,55 +448,6 @@ export default function CustomReportsPage() {
           </Typography>
 
           <Box sx={{ flexGrow: 1 }} />
-
-          <Tooltip title={!report ? 'Generate a report first' : ''} placement="top" arrow>
-            <span>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={saveLoading ? <CircularProgress size={13} color="inherit" /> : <BookmarkAddIcon fontSize="small" />}
-                onClick={handleSaveReport}
-                disabled={!report || saveLoading}
-                sx={{
-                  whiteSpace: 'nowrap',
-                  textTransform: 'none',
-                  borderColor: 'rgba(129,187,230,0.4)',
-                  color: '#81bbe6',
-                  fontSize: '0.78rem',
-                  px: 1.5,
-                  '&:hover': { borderColor: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
-                  '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
-                }}
-              >
-                {saveLoading ? 'Saving…' : 'Save Custom Report'}
-              </Button>
-            </span>
-          </Tooltip>
-
-          <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
-          <Tooltip title={!report ? 'Generate a report first' : ''} placement="top" arrow>
-            <span>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={pdfSaving ? <CircularProgress size={13} color="inherit" /> : <PictureAsPdfIcon fontSize="small" />}
-                onClick={handleSavePdf}
-                disabled={pdfSaving || !report}
-                sx={{
-                  whiteSpace: 'nowrap',
-                  borderColor: 'rgba(129,187,230,0.4)',
-                  color: '#81bbe6',
-                  fontSize: '0.78rem',
-                  px: 1.5,
-                  '&:hover': { borderColor: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
-                  '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
-                }}
-              >
-                {pdfSaving ? 'Generating…' : 'Save as PDF'}
-              </Button>
-            </span>
-          </Tooltip>
 
           <IconButton onClick={handleCloseDrawer} sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#fff' } }}>
             <CloseIcon />
@@ -652,8 +625,10 @@ export default function CustomReportsPage() {
                     '& .MuiDataGrid-filler':            { bgcolor: 'transparent' },
                     '& .MuiDataGrid-scrollbarFiller':   { bgcolor: 'transparent' },
                     '& .MuiDataGrid-overlay':           { bgcolor: 'rgba(13,27,42,0.7)', color: 'rgba(255,255,255,0.45)' },
-                    '& .MuiCheckbox-root':              { color: 'rgba(255,255,255,0.3)' },
-                    '& .MuiCheckbox-root.Mui-checked':  { color: '#81bbe6' },
+                    '& .MuiCheckbox-root':                     { color: 'rgba(255,255,255,0.3)' },
+                    '& .MuiCheckbox-root.Mui-checked':         { color: '#81bbe6' },
+                    '& .MuiDataGrid-row.Mui-selected':         { bgcolor: 'rgba(255,255,255,0.07)' },
+                    '& .MuiDataGrid-row.Mui-selected:hover':   { bgcolor: 'rgba(255,255,255,0.1)' },
                   }}
                 />
               </Box>
@@ -690,15 +665,115 @@ export default function CustomReportsPage() {
           )}
         </Box>
 
-        {/* ── Report content ── */}
+      </Drawer>
+
+      {/* ── Report sub-drawer ── */}
+      <Drawer
+        anchor="right"
+        open={reportDrawerOpen}
+        onClose={handleCloseReportDrawer}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: '100vw', md: '80vw', lg: '70vw' },
+              maxWidth: 1200,
+              bgcolor: '#0d1b2a',
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          },
+        }}
+      >
+        {/* Sub-drawer action bar */}
+        <Box
+          sx={{
+            bgcolor: '#111d2b',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            px: 2,
+            py: 1,
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+            Generated Report
+          </Typography>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <TextField
+            value={reportNameInput}
+            onChange={(e) => setReportNameInput(e.target.value)}
+            placeholder="Report name (optional)"
+            size="small"
+            sx={{
+              width: 220,
+              ...darkInputSx,
+              '& .MuiOutlinedInput-root': {
+                ...darkInputSx['& .MuiOutlinedInput-root'],
+                fontSize: '0.8rem',
+              },
+            }}
+          />
+
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={saveLoading ? <CircularProgress size={13} color="inherit" /> : <BookmarkAddIcon fontSize="small" />}
+            onClick={handleSaveReport}
+            disabled={!report || saveLoading}
+            sx={{
+              whiteSpace: 'nowrap',
+              textTransform: 'none',
+              borderColor: 'rgba(129,187,230,0.4)',
+              color: '#81bbe6',
+              fontSize: '0.78rem',
+              px: 1.5,
+              '&:hover': { borderColor: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
+              '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
+            }}
+          >
+            {saveLoading ? 'Saving…' : 'Save Custom Report'}
+          </Button>
+
+          <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={pdfSaving ? <CircularProgress size={13} color="inherit" /> : <PictureAsPdfIcon fontSize="small" />}
+            onClick={handleSavePdf}
+            disabled={pdfSaving || !report}
+            sx={{
+              whiteSpace: 'nowrap',
+              borderColor: 'rgba(129,187,230,0.4)',
+              color: '#81bbe6',
+              fontSize: '0.78rem',
+              px: 1.5,
+              '&:hover': { borderColor: '#81bbe6', bgcolor: 'rgba(129,187,230,0.08)' },
+              '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
+            }}
+          >
+            {pdfSaving ? 'Generating…' : 'Save as PDF'}
+          </Button>
+
+          <IconButton onClick={handleCloseReportDrawer} sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#fff' } }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {/* Save error banner */}
+        {saveError && (
+          <Box sx={{ bgcolor: 'rgba(248,113,113,0.1)', borderBottom: '1px solid rgba(248,113,113,0.25)', px: 3, py: 1 }}>
+            <Typography sx={{ color: '#f87171', fontSize: '0.82rem' }}>{saveError}</Typography>
+          </Box>
+        )}
+
+        {/* Sub-drawer report content */}
         <Box sx={{ overflowY: 'auto', flex: 1 }}>
-          {fetchLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
-              <CircularProgress sx={{ color: '#81bbe6' }} />
-            </Box>
-          ) : (
-            report && <HomesliceReport data={report} hideFab />
-          )}
+          {report && <HomesliceReport data={report} hideFab />}
         </Box>
       </Drawer>
     </Box>
