@@ -22,9 +22,10 @@ export default function App() {
               <Route path="/"               element={<DashboardPage />} />
               <Route path="/custom-reports" element={<CustomReportsPage />} />
               <Route path="/profile"        element={<ProfilePage />} />
-              <Route path="*"        element={<Navigate to="/" replace />} />
+              <Route path="*"               element={<Navigate to="/" replace />} />
             </Route>
           </Route>
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
