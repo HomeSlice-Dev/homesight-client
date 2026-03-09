@@ -21,10 +21,10 @@ export default function LoginPage() {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
 
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [error,    setError]    = useState('');
-  const [loading,  setLoading]  = useState(false);
+  const [identifier, setIdentifier] = useState('');
+  const [password,   setPassword]   = useState('');
+  const [error,      setError]      = useState('');
+  const [loading,    setLoading]    = useState(false);
 
   if (isAuthenticated) return <Navigate to="/" replace />;
 
@@ -33,7 +33,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await login(identifier, password);
       navigate('/', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -82,13 +82,13 @@ export default function LoginPage() {
         </Typography>
 
         <TextField
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          label="Email or Username"
+          type="text"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           fullWidth
           required
-          autoComplete="email"
+          autoComplete="username"
           autoFocus
           sx={textFieldSx}
         />
