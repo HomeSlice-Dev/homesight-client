@@ -2,17 +2,23 @@ import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import Divider from '@mui/material/Divider';
+import FormControl from '@mui/material/FormControl';
 import InputAdornment from '@mui/material/InputAdornment';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import { DataGrid } from '@mui/x-data-grid';
 import ReportDrawer from '../components/ReportDrawer';
 import { apiFetch } from '../utils/api';
+import { API_URL } from '../config';
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 function fmtCurrency(v) {
@@ -38,6 +44,9 @@ const CLIENT_COLUMNS = [
 
 export default function DashboardPage() {
   const [filterText,     setFilterText]     = useState('');
+  const [filterAE,       setFilterAE]       = useState('');
+  const [dlLoading,      setDlLoading]      = useState(false);
+  const [dlProgress,     setDlProgress]     = useState(null); // { current, total, name }
   const [reports,        setReports]        = useState([]);
   const [loading,        setLoading]        = useState(false);
   const [error,          setError]          = useState(null);
@@ -97,6 +106,68 @@ export default function DashboardPage() {
     setSelectedRowId(null);
   }
 
+  async function handleBatchDownload() {
+    const reportsToDownload = filteredRows.map((row) => reports[row.id]);
+    const token = localStorage.getItem('authToken');
+    setDlLoading(true);
+    setDlProgress({ current: 0, total: reportsToDownload.length, name: '' });
+    try {
+      const res = await fetch(`${API_URL}/api/reports/batch-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ ae_name: filterAE, token, reports: reportsToDownload }),
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let jobId = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value).split('\n').filter((l) => l.startsWith('data: '));
+        for (const line of lines) {
+          const event = JSON.parse(line.slice(6));
+          if (event.type === 'progress') {
+            setDlProgress({ current: event.current, total: event.total, name: event.name });
+          } else if (event.type === 'done') {
+            jobId = event.job_id;
+          }
+        }
+      }
+
+      if (!jobId) throw new Error('No job ID received from server');
+
+      const dlRes = await fetch(
+        `${API_URL}/api/reports/batch-pdf/download/${jobId}?ae_name=${encodeURIComponent(filterAE)}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+      );
+      if (!dlRes.ok) throw new Error(`Download failed: ${dlRes.status}`);
+
+      const buf = await dlRes.arrayBuffer();
+      const blob = new Blob([buf], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {
+        href:     url,
+        download: `${filterAE} - Reports ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }).replace(/\//g, '-')}.zip`,
+      });
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Batch download error:', err);
+      alert(`PDF generation failed: ${err?.message ?? String(err)}`);
+    } finally {
+      setDlLoading(false);
+      setDlProgress(null);
+    }
+  }
+
   // Build flat rows for the DataGrid — use array index as id so that multiple
   // reports per client (different months share the same client_id) each get a unique row.
   const rows = reports.map((r, i) => ({
@@ -110,9 +181,11 @@ export default function DashboardPage() {
     total_ctr:         r.pages?.cover?.cards?.total_ctr         ?? 0,
   }));
 
-  const filteredRows = filterText.trim()
-    ? rows.filter((r) => r.display_name.toLowerCase().includes(filterText.toLowerCase()))
-    : rows;
+  const filteredRows = rows.filter((r) => {
+    const matchesName = !filterText.trim() || r.display_name.toLowerCase().includes(filterText.toLowerCase());
+    const matchesAE   = !filterAE           || r.account_executive === filterAE;
+    return matchesName && matchesAE;
+  });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
@@ -161,6 +234,37 @@ export default function DashboardPage() {
               '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' },
             }}
           />
+
+          {/* ── Account executive filter ── */}
+          <FormControl size="small" sx={{ flex: '1 1 180px', maxWidth: 220 }}>
+            <Select
+              displayEmpty
+              value={filterAE}
+              onChange={(e) => setFilterAE(e.target.value)}
+              sx={{
+                color: filterAE ? '#fff' : 'rgba(255,255,255,0.3)',
+                bgcolor: 'rgba(255,255,255,0.04)',
+                fontSize: '0.875rem',
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#81bbe6' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#81bbe6' },
+                '& .MuiSelect-icon': { color: 'rgba(255,255,255,0.3)' },
+              }}
+              MenuProps={{
+                PaperProps: {
+                  sx: { bgcolor: '#111d2b', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' },
+                },
+              }}
+            >
+              <MenuItem value="" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem' }}>
+                All account executives
+              </MenuItem>
+              {['Shelley Hughes', 'Brad Heid', 'Mitchell Stafford', 'House Digital',
+                'Tyler Kaitfors', 'Therly Hofman', 'Tanya Wilson', 'Breezy Millar'].map((ae) => (
+                <MenuItem key={ae} value={ae} sx={{ fontSize: '0.875rem' }}>{ae}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255,255,255,0.1)', mx: 0.5 }} />
 
@@ -217,7 +321,67 @@ export default function DashboardPage() {
               {filteredRows.length} of {reports.length} clients
             </Typography>
           )}
+
+          {/* ── Batch PDF download ── */}
+          <Tooltip
+            title={!filterAE ? 'Select an account executive to enable bulk download' : `Download all ${filteredRows.length} report(s) as a ZIP of PDFs`}
+            placement="top"
+            arrow
+          >
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={
+                  dlLoading
+                    ? <CircularProgress size={13} color="inherit" />
+                    : <DownloadIcon fontSize="small" />
+                }
+                onClick={handleBatchDownload}
+                disabled={!filterAE || filteredRows.length === 0 || dlLoading}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  fontSize: '0.8rem',
+                  px: 1.5,
+                  bgcolor: '#1c5784',
+                  '&:hover': { bgcolor: '#245f8f' },
+                  '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.25)' },
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {dlProgress && dlProgress.total > 0
+                  ? `Generating ${dlProgress.current}/${dlProgress.total}…`
+                  : dlLoading
+                    ? 'Starting…'
+                    : `Download PDFs (${filteredRows.length})`}
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
+
+        {/* ── PDF generation progress bar ── */}
+        {dlProgress && dlProgress.total > 0 && (
+          <Box sx={{ mt: 1.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
+                {dlProgress.name || 'Preparing…'}
+              </Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>
+                {dlProgress.current} / {dlProgress.total}
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={(dlProgress.current / dlProgress.total) * 100}
+              sx={{
+                borderRadius: 1,
+                bgcolor: 'rgba(255,255,255,0.08)',
+                '& .MuiLinearProgress-bar': { bgcolor: '#1c5784', borderRadius: 1 },
+              }}
+            />
+          </Box>
+        )}
       </Box>
 
       {/* ── Error state ── */}

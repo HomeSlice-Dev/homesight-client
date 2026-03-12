@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -6,9 +6,8 @@ import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CloseIcon from '@mui/icons-material/Close';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import PrintIcon from '@mui/icons-material/Print';
 import HomesliceReport from '../HomesliceReport';
-import { elementToPdfBlob, safePdfFilename, downloadBlob } from '../utils/pdfUtils';
 
 /**
  * Reusable right-side drawer that renders a HomesliceReport.
@@ -21,25 +20,30 @@ import { elementToPdfBlob, safePdfFilename, downloadBlob } from '../utils/pdfUti
  *   loading — shows spinner instead of report while true (e.g. while fetching)
  */
 export default function ReportDrawer({ open, onClose, report, title, loading = false }) {
-  const [pdfSaving, setPdfSaving] = useState(false);
-
-  async function handleSavePdf() {
-    if (!report || pdfSaving) return;
-    setPdfSaving(true);
-    try {
-      const el = document.getElementById(`homesight-report-${report.client_id}`);
-      if (!el) return;
-      const blob = await elementToPdfBlob(el);
-      downloadBlob(blob, safePdfFilename(report.display_name));
-    } finally {
-      setPdfSaving(false);
-    }
+  function handleSavePdf() {
+    if (!report) return;
+    // Add class so print CSS shows only the portal copy and hides everything else
+    document.body.classList.add('printing-report');
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('printing-report');
+    }, { once: true });
+    window.print();
   }
 
   const displayTitle = title ?? report?.display_name ?? '';
 
   return (
-    <Drawer
+    <>
+      {/* Hidden print-only copy rendered directly in <body> via portal.
+          Print CSS reveals this and hides everything else when printing. */}
+      {report && createPortal(
+        <div data-print-report>
+          <HomesliceReport data={report} hideFab />
+        </div>,
+        document.body,
+      )}
+
+      <Drawer
       anchor="right"
       open={open}
       onClose={onClose}
@@ -76,9 +80,9 @@ export default function ReportDrawer({ open, onClose, report, title, loading = f
           <Button
             variant="outlined"
             size="small"
-            startIcon={pdfSaving ? <CircularProgress size={13} color="inherit" /> : <PictureAsPdfIcon fontSize="small" />}
+            startIcon={<PrintIcon fontSize="small" />}
             onClick={handleSavePdf}
-            disabled={pdfSaving || loading || !report}
+            disabled={loading || !report}
             sx={{
               whiteSpace: 'nowrap',
               borderColor: 'rgba(129,187,230,0.4)',
@@ -89,7 +93,7 @@ export default function ReportDrawer({ open, onClose, report, title, loading = f
               '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)' },
             }}
           >
-            {pdfSaving ? 'Generating…' : 'Save as PDF'}
+            Print / PDF
           </Button>
           <IconButton onClick={onClose} sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#fff' } }}>
             <CloseIcon />
@@ -108,5 +112,6 @@ export default function ReportDrawer({ open, onClose, report, title, loading = f
         )}
       </Box>
     </Drawer>
+    </>
   );
 }

@@ -11,26 +11,129 @@ body {
 
 /* ── Print / PDF setup ─────────────────────────────────────────────────────── */
 
-/* Landscape pages, no browser-added margins */
+/*
+ * The print-only report copy is rendered off-screen (NOT display:none) so that
+ * MUI DataGrid and MUI X Charts can measure their containers and render
+ * correctly.  Positioned fixed at -9999px keeps it out of the document flow.
+ * Width matches letter portrait content area (8.5" − 2×0.5" margin = 7.5" = 720px at 96dpi)
+ * so the same breakpoints apply in the pre-render as during print.
+ */
+[data-print-report] {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 720px; /* 7.5in at 96dpi — exactly the portrait letter content area (8.5" − 2×0.5" margin) */
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Letter portrait, generous margins */
 @page {
-  size: landscape;
-  margin: 0;
+  size: letter portrait;
+  margin: 0.5in;
+  background: #0d1b2a;
+
+  /* Remove browser-injected URL and page title from the top margin */
+  @top-left   { content: ""; }
+  @top-center { content: ""; }
+  @top-right  { content: ""; }
+
+  /* Remove date from bottom-left; keep only page number bottom-right */
+  @bottom-left   { content: ""; }
+  @bottom-center { content: ""; }
+  @bottom-right  {
+    content: counter(page);
+    font-family: sans-serif;
+    font-size: 9pt;
+    color: rgba(255, 255, 255, 0.6);
+  }
 }
 
 @media print {
-  /* Force all background colors and images to print */
+  /* Force backgrounds and images to print */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Remove body scroll artifacts */
   body {
     overflow: visible;
   }
 
-  /* Hide everything that isn't the report (sidebar, appbar, search bar) */
+  /* Generic utility — hide nav/sidebars/etc. when printing normally */
   .print-hide {
     display: none !important;
+  }
+
+  /* ── Print isolation ────────────────────────────────────────────────────────
+     body.printing-report is added by ReportDrawer before window.print().
+     Hide every direct body child except the off-screen portal copy.          */
+  body.printing-report > *:not([data-print-report]) {
+    display: none !important;
+  }
+
+  /* Bring the off-screen portal into normal flow for print */
+  body.printing-report [data-print-report] {
+    position: static !important;
+    left: auto !important;
+    width: auto !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  /* ── Background image — fixed so it appears on every printed page ───────── */
+  [data-report-bg-image] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: unset !important;
+    transform: none !important;
+    object-fit: cover !important;
+    opacity: 0.55 !important;
+    z-index: 0 !important;
+  }
+
+  /* ── DataGrid: show all columns, no clipping ──────────────────────────────── */
+  .MuiDataGrid-scrollbar--horizontal {
+    display: none !important;
+  }
+
+  /* Allow DataGrid to overflow its section container rather than clip columns */
+  [data-channel-section] {
+    overflow: visible !important;
+  }
+
+  /* Ensure the DataGrid itself doesn't scroll — all columns must be visible */
+  .MuiDataGrid-virtualScroller {
+    overflow: visible !important;
+  }
+  .MuiDataGrid-virtualScrollerContent,
+  .MuiDataGrid-virtualScrollerRenderZone {
+    width: 100% !important;
+    position: static !important;
+  }
+  .MuiDataGrid-row {
+    width: 100% !important;
+  }
+
+  /* ── Cover page fills the first page ───────────────────────────────────── */
+  [data-report-section]:not([data-channel-section]) {
+    min-height: 100vh;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  /* ── Each channel section starts on its own page ───────────────────────── */
+  [data-channel-section] {
+    page-break-before: always;
+    break-before: page;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    min-height: unset !important;
   }
 }

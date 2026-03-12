@@ -2,13 +2,11 @@ import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import Dialog from '@mui/material/Dialog';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { elementToPdfBlob, safePdfFilename, downloadBlob } from './utils/pdfUtils';
+import PrintIcon from '@mui/icons-material/Print';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { DataGrid } from '@mui/x-data-grid/DataGrid';
 import reportBg from './assets/report-images/report-bg.png';
@@ -149,13 +147,14 @@ function DigitalLineChart({ chartData = [] }) {
   const impressions = chartData.map((d) => d.impressions);
 
   return (
-    <Box sx={{ width: '100%', mb: 2 }}>
+    <Box sx={{ width: '100%', mb: 2, display: 'flex', p: 0 }}>
       <LineChart
         height={320}
-        xAxis={[{ scaleType: 'point', data: dates, tickLabelstyle: { fill: '#fff', fontSize: 11 } }]}
+        margin={{ left: 0, right: 0, top: 10, bottom: 36 }}
+        xAxis={[{ scaleType: 'point', data: dates, tickLabelStyle: { fill: '#fff', fontSize: 11 } }]}
         yAxis={[
-          { id: 'clicks',      position: 'left',  tickLabelstyle: { fill: '#81bbe6', fontSize: 11 } },
-          { id: 'impressions', position: 'right', tickLabelstyle: { fill: '#000000', fontSize: 11 } },
+          { id: 'clicks',      position: 'left',  tickLabelStyle: { fill: '#81bbe6', fontSize: 11 } },
+          { id: 'impressions', position: 'right', tickLabelStyle: { fill: '#000000', fontSize: 11 } },
         ]}
         series={[
           { yAxisId: 'clicks',      data: clicks,      label: 'Clicks',      color: '#81bbe6', showMark: false },
@@ -175,16 +174,60 @@ function DigitalLineChart({ chartData = [] }) {
   );
 }
 
+// ─── Keywords data grid ───────────────────────────────────────────────────────
+const KEYWORD_COLUMNS = [
+  { field: 'keyword_text', headerName: 'Keyword',     flex: 2, minWidth: 200 },
+  { field: 'match_type',   headerName: 'Match Type',  flex: 1, minWidth: 150  },
+  { field: 'clicks',       headerName: 'Clicks',      flex: 1, minWidth: 100,  valueFormatter: (v) => fmtNumber(v) },
+  { field: 'impressions',  headerName: 'Impressions', flex: 1, minWidth: 130, valueFormatter: (v) => fmtNumber(v) },
+  { field: 'ctr',          headerName: 'CTR',         flex: 1, minWidth: 80,  valueFormatter: (v) => fmtPercent(v) },
+];
+
+function KeywordsTable({ rows = [] }) {
+  if (!rows.length) return null;
+  const tableRows = rows.slice(0, 9).map((r, i) => ({ id: i, ...r }));
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Typography sx={{ fontFamily: FONT, fontWeight: 700, fontSize: '0.75rem', color: '#fff', textTransform: 'uppercase', letterSpacing: 0.8, mb: 1 }}>
+        Top Keywords
+      </Typography>
+      <DataGrid
+        rows={tableRows}
+        columns={KEYWORD_COLUMNS}
+        autoHeight
+        hideFooter
+        disableColumnMenu
+        disableRowSelectionOnClick
+        sx={{
+          border: 'none',
+          color: '#fff',
+          '& .MuiDataGrid-columnHeader':          { bgcolor: 'rgba(0,0,0,0.25)', color: '#fff' },
+          '& .MuiDataGrid-columnSeparator':       { display: 'none' },
+          '& .MuiDataGrid-cell':                  { borderColor: 'rgba(255,255,255,0.12)', color: '#fff' },
+          '& .MuiDataGrid-row:hover':             { bgcolor: 'rgba(255,255,255,0.08)' },
+          '& .MuiDataGrid-filler':                { bgcolor: 'transparent' },
+          '& .MuiDataGrid-scrollbarFiller':       { bgcolor: 'transparent' },
+          '& .MuiDataGrid-columnHeaderTitle':     { fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.8 },
+          bgcolor: 'rgba(0,0,0,0.15)',
+          borderRadius: 2,
+        }}
+      />
+    </Box>
+  );
+}
+
 // ─── Campaign data grid ───────────────────────────────────────────────────────
+// Print content area = 664px (720px letter − 16px container px − 40px section padding)
+// 9 flex units → 73.8px each. All minWidths kept ≤ 72px so flex fills 100% without overflow.
 const CAMPAIGN_COLUMNS = [
-  { field: 'campaign',    headerName: 'Campaign',     flex: 2, minWidth: 140 },
-  { field: 'cost',        headerName: 'Cost',         flex: 1, minWidth: 90,  valueFormatter: (v) => fmtCurrency(v) },
+  { field: 'campaign',    headerName: 'Campaign',     flex: 2, minWidth: 110 },
+  { field: 'cost',        headerName: 'Cost',         flex: 1, minWidth: 100,  valueFormatter: (v) => fmtCurrency(v) },
   { field: 'clicks',      headerName: 'Clicks',       flex: 1, minWidth: 80,  valueFormatter: (v) => fmtNumber(v) },
-  { field: 'impressions', headerName: 'Impressions',  flex: 1, minWidth: 110, valueFormatter: (v) => fmtNumber(v) },
+  { field: 'impressions', headerName: 'Impressions',  flex: 1, minWidth: 100,  valueFormatter: (v) => fmtNumber(v) },
   { field: 'conversions', headerName: 'Conv.',        flex: 1, minWidth: 70  },
-  { field: 'cpc',         headerName: 'CPC',          flex: 1, minWidth: 80,  valueFormatter: (v) => fmtCurrency(v) },
+  { field: 'cpc',         headerName: 'CPC',          flex: 1, minWidth: 65,  valueFormatter: (v) => fmtCurrency(v) },
   { field: 'cpm',         headerName: 'CPM',          flex: 1, minWidth: 80,  valueFormatter: (v) => fmtCurrency(v) },
-  { field: 'ctr',         headerName: 'CTR',          flex: 1, minWidth: 80,  valueFormatter: (v) => fmtPercent(v) },
+  { field: 'ctr',         headerName: 'CTR',          flex: 1, minWidth: 60,  valueFormatter: (v) => fmtPercent(v) },
 ];
 
 function CampaignTable({ rows = [] }) {
@@ -195,6 +238,7 @@ function CampaignTable({ rows = [] }) {
       <DataGrid
         rows={tableRows}
         columns={CAMPAIGN_COLUMNS}
+        autoHeight
         hideFooter
         disableColumnMenu
         disableRowSelectionOnClick
@@ -281,17 +325,23 @@ function ImageCardRow({ ads = [], height = 200 }) {
 }
 
 // ─── Rotated sidebar label — desktop only ────────────────────────────────────
-function SectionLabel({ name, side }) {
+function SectionLabel({ name, side, valign = 'center' }) {
+  const isTop = valign === 'flex-start';
   return (
     <Box
+      data-report-section-label
       sx={{
         width: '17%',
         flexShrink: 0,
         display: { xs: 'none', md: 'flex' },
-        alignItems: 'center',
+        alignItems: valign,
         justifyContent: 'center',
         overflow: 'hidden',
-        py: 4,
+        // flex-start needs extra top padding: rotate(-90deg) makes visual height ≈ pre-rotation
+        // width, so the text clips at the top unless the pre-rotation center is pushed down far
+        // enough (pt > textWidth/2 − fontHeight/2).
+        pt: isTop ? { md: 22, lg: 28 } : 4,
+        pb: 4,
         pl: side === 'right' ? 0 : 1,
         pr: side === 'right' ? 1 : 0,
       }}
@@ -320,13 +370,14 @@ function SectionLabel({ name, side }) {
 }
 
 // ─── Channel section card ─────────────────────────────────────────────────────
-function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts }) {
+function ChannelSection({ name, bgcolor, labelSide = 'right', labelValign = 'center', metrics, charts }) {
   const isLabelLeft = labelSide === 'left';
-  const label = <SectionLabel name={name} side={labelSide} />;
+  const label = <SectionLabel name={name} side={labelSide} valign={labelValign} />;
 
   const content = (
-    <Box sx={{ flex: 1, p: { xs: 2.5, md: 5 }, minWidth: 0 }}>
+    <Box data-section-content sx={{ flex: 1, p: { xs: 2.5, md: 5 }, minWidth: 0 }}>
       <Typography
+        data-section-mobile-title
         sx={{
           display: { xs: 'block', md: 'none' },
           fontFamily: FONT,
@@ -358,6 +409,7 @@ function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts })
   return (
     <Box
       data-report-section
+      data-channel-section
       sx={{
         bgcolor,
         borderRadius: 5,
@@ -368,10 +420,6 @@ function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts })
         ml: isLabelLeft ? { xs: 0, md: '-30px' } : { xs: 0, md: '30px' },
         mr: isLabelLeft ? { xs: 0, md: '30px' } : { xs: 0, md: '-30px' },
         minHeight: { xs: 'unset', md: 580 },
-        '@media print': {
-          overflow: 'visible',
-          breakInside: 'avoid',
-        },
       }}
     >
       {isLabelLeft ? <>{label}{content}</> : <>{content}{label}</>}
@@ -428,8 +476,14 @@ export default function HomesliceReport({ data, hideFab = false }) {
       name: 'Search',
       bgcolor: '#333535',
       labelSide: 'left',
+      labelValign: 'flex-start',
       metrics: buildMetrics(searchPage.cards, icons.cpc3, icons.cpm3),
-      charts: <CampaignTable rows={searchPage.campaign_table || []} />,
+      charts: (
+        <>
+          <CampaignTable rows={searchPage.campaign_table || []} />
+          <KeywordsTable rows={searchPage.top_keywords || []} />
+        </>
+      ),
     },
     websitePage && {
       name: 'RC Post',
@@ -446,19 +500,6 @@ export default function HomesliceReport({ data, hideFab = false }) {
   ].filter(Boolean);
 
   const reportId = `homesight-report-${data.client_id}`;
-  const [saving, setSaving] = useState(false);
-
-  async function handleSavePdf() {
-    if (saving) return;
-    setSaving(true);
-    try {
-      const el = document.getElementById(reportId);
-      const blob = await elementToPdfBlob(el);
-      downloadBlob(blob, safePdfFilename(data.display_name));
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <Box
@@ -471,9 +512,10 @@ export default function HomesliceReport({ data, hideFab = false }) {
         '@media print': { overflow: 'visible' },
       }}
     >
-      {/* Decorative background image */}
+      {/* Decorative background image — hidden in print via CSS */}
       <Box
         component="img"
+        data-report-bg-image
         src={ASSETS.bgMain}
         alt=""
         crossOrigin="anonymous"
@@ -512,6 +554,8 @@ export default function HomesliceReport({ data, hideFab = false }) {
               display: 'flex',
               gap: { xs: 1, md: 2 },
               alignItems: 'center',
+              justifyContent: 'center',
+              mb: { xs: 2, md: 3 },
             }}
           >
             <Box
@@ -604,13 +648,12 @@ export default function HomesliceReport({ data, hideFab = false }) {
         </Box>
       </Box>
 
-      {/* ── SAVE AS PDF ─────────────────────────────────────────────────── */}
+      {/* ── PRINT / SAVE AS PDF ─────────────────────────────────────────── */}
       {!hideFab && (
         <Fab
           color="primary"
-          title={saving ? 'Generating PDF…' : 'Save as PDF'}
-          onClick={handleSavePdf}
-          disabled={saving}
+          title="Print / Save as PDF"
+          onClick={() => window.print()}
           sx={{
             position: 'fixed',
             bottom: 28,
@@ -618,7 +661,7 @@ export default function HomesliceReport({ data, hideFab = false }) {
             '@media print': { display: 'none' },
           }}
         >
-          {saving ? <CircularProgress size={24} color="inherit" /> : <PictureAsPdfIcon />}
+          <PrintIcon />
         </Fab>
       )}
 

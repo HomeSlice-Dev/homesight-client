@@ -6,6 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      // Proxy all API calls through the dev server to avoid CORS issues.
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        proxyTimeout: 300000,  // 5 min — PDF generation can take a while
+        timeout: 300000,
+      },
       // Proxy R2 asset requests through the dev server to avoid CORS issues
       // with html2canvas during PDF generation.
       // In production, add CORS headers to the R2 bucket instead.
