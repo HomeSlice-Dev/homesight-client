@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -45,6 +46,7 @@ export default function DashboardPage() {
   const [filterText,     setFilterText]     = useState('');
   const [filterAE,       setFilterAE]       = useState('');
   const [dlLoading,      setDlLoading]      = useState(false);
+  const [dlProgress,     setDlProgress]     = useState(null); // { current, total, name }
   const [reports,        setReports]        = useState([]);
   const [loading,        setLoading]        = useState(false);
   const [error,          setError]          = useState(null);
@@ -108,6 +110,7 @@ export default function DashboardPage() {
     const reportsToDownload = filteredRows.map((row) => reports[row.id]);
     const token = localStorage.getItem('authToken');
     setDlLoading(true);
+    setDlProgress({ current: 0, total: reportsToDownload.length, name: '' });
     try {
       const res = await fetch(`${API_URL}/api/reports/batch-pdf`, {
         method: 'POST',
@@ -117,29 +120,51 @@ export default function DashboardPage() {
         },
         body: JSON.stringify({ ae_name: filterAE, token, reports: reportsToDownload }),
       });
-      console.log('[pdf] response status:', res.status, 'ok:', res.ok, 'type:', res.headers.get('content-type'));
       if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-      const buf = await res.arrayBuffer();
-      console.log('[pdf] buffer byteLength:', buf.byteLength);
-      if (buf.byteLength === 0) throw new Error('Server returned an empty response');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let jobId = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value).split('\n').filter((l) => l.startsWith('data: '));
+        for (const line of lines) {
+          const event = JSON.parse(line.slice(6));
+          if (event.type === 'progress') {
+            setDlProgress({ current: event.current, total: event.total, name: event.name });
+          } else if (event.type === 'done') {
+            jobId = event.job_id;
+          }
+        }
+      }
+
+      if (!jobId) throw new Error('No job ID received from server');
+
+      const dlRes = await fetch(
+        `${API_URL}/api/reports/batch-pdf/download/${jobId}?ae_name=${encodeURIComponent(filterAE)}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+      );
+      if (!dlRes.ok) throw new Error(`Download failed: ${dlRes.status}`);
+
+      const buf = await dlRes.arrayBuffer();
       const blob = new Blob([buf], { type: 'application/zip' });
-      const today = new Date()
-        .toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
-        .replace(/\//g, '-');
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement('a'), {
         href:     url,
-        download: `${filterAE} - Reports ${today}.zip`,
+        download: `${filterAE} - Reports.zip`,
       });
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Batch download error:', err?.name, err?.message, err);
+      console.error('Batch download error:', err);
       alert(`PDF generation failed: ${err?.message ?? String(err)}`);
     } finally {
       setDlLoading(false);
+      setDlProgress(null);
     }
   }
 
@@ -325,13 +350,38 @@ export default function DashboardPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {dlLoading
-                  ? 'Generating PDFs…'
-                  : `Download PDFs (${filteredRows.length})`}
+                {dlProgress && dlProgress.total > 0
+                  ? `Generating ${dlProgress.current}/${dlProgress.total}…`
+                  : dlLoading
+                    ? 'Starting…'
+                    : `Download PDFs (${filteredRows.length})`}
               </Button>
             </span>
           </Tooltip>
         </Box>
+
+        {/* ── PDF generation progress bar ── */}
+        {dlProgress && dlProgress.total > 0 && (
+          <Box sx={{ mt: 1.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
+                {dlProgress.name || 'Preparing…'}
+              </Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem' }}>
+                {dlProgress.current} / {dlProgress.total}
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={(dlProgress.current / dlProgress.total) * 100}
+              sx={{
+                borderRadius: 1,
+                bgcolor: 'rgba(255,255,255,0.08)',
+                '& .MuiLinearProgress-bar': { bgcolor: '#1c5784', borderRadius: 1 },
+              }}
+            />
+          </Box>
+        )}
       </Box>
 
       {/* ── Error state ── */}
