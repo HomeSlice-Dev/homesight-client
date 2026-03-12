@@ -176,16 +176,16 @@ function DigitalLineChart({ chartData = [] }) {
 
 // ─── Keywords data grid ───────────────────────────────────────────────────────
 const KEYWORD_COLUMNS = [
-  { field: 'keyword_text', headerName: 'Keyword',     flex: 3, minWidth: 140 },
-  { field: 'match_type',   headerName: 'Match Type',  flex: 1, minWidth: 90  },
-  { field: 'clicks',       headerName: 'Clicks',      flex: 1, minWidth: 70,  valueFormatter: (v) => fmtNumber(v) },
-  { field: 'impressions',  headerName: 'Impressions', flex: 1, minWidth: 100, valueFormatter: (v) => fmtNumber(v) },
-  { field: 'ctr',          headerName: 'CTR',         flex: 1, minWidth: 60,  valueFormatter: (v) => fmtPercent(v) },
+  { field: 'keyword_text', headerName: 'Keyword',     flex: 2, minWidth: 200 },
+  { field: 'match_type',   headerName: 'Match Type',  flex: 1, minWidth: 150  },
+  { field: 'clicks',       headerName: 'Clicks',      flex: 1, minWidth: 100,  valueFormatter: (v) => fmtNumber(v) },
+  { field: 'impressions',  headerName: 'Impressions', flex: 1, minWidth: 130, valueFormatter: (v) => fmtNumber(v) },
+  { field: 'ctr',          headerName: 'CTR',         flex: 1, minWidth: 80,  valueFormatter: (v) => fmtPercent(v) },
 ];
 
 function KeywordsTable({ rows = [] }) {
   if (!rows.length) return null;
-  const tableRows = rows.map((r, i) => ({ id: i, ...r }));
+  const tableRows = rows.slice(0, 9).map((r, i) => ({ id: i, ...r }));
   return (
     <Box sx={{ mb: 2 }}>
       <Typography sx={{ fontFamily: FONT, fontWeight: 700, fontSize: '0.75rem', color: '#fff', textTransform: 'uppercase', letterSpacing: 0.8, mb: 1 }}>

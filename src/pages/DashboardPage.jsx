@@ -153,7 +153,7 @@ export default function DashboardPage() {
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement('a'), {
         href:     url,
-        download: `${filterAE} - Reports.zip`,
+        download: `${filterAE} - Reports ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }).replace(/\//g, '-')}.zip`,
       });
       document.body.appendChild(a);
       a.click();

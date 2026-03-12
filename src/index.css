@@ -95,9 +95,27 @@ body {
     z-index: 0 !important;
   }
 
-  /* ── DataGrid: hide horizontal scrollbar, keep columns exactly as rendered ── */
+  /* ── DataGrid: show all columns, no clipping ──────────────────────────────── */
   .MuiDataGrid-scrollbar--horizontal {
     display: none !important;
+  }
+
+  /* Allow DataGrid to overflow its section container rather than clip columns */
+  [data-channel-section] {
+    overflow: visible !important;
+  }
+
+  /* Ensure the DataGrid itself doesn't scroll — all columns must be visible */
+  .MuiDataGrid-virtualScroller {
+    overflow: visible !important;
+  }
+  .MuiDataGrid-virtualScrollerContent,
+  .MuiDataGrid-virtualScrollerRenderZone {
+    width: 100% !important;
+    position: static !important;
+  }
+  .MuiDataGrid-row {
+    width: 100% !important;
   }
 
   /* ── Cover page fills the first page ───────────────────────────────────── */
