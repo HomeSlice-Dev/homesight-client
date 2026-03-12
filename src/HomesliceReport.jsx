@@ -174,6 +174,48 @@ function DigitalLineChart({ chartData = [] }) {
   );
 }
 
+// ─── Keywords data grid ───────────────────────────────────────────────────────
+const KEYWORD_COLUMNS = [
+  { field: 'keyword_text', headerName: 'Keyword',     flex: 3, minWidth: 140 },
+  { field: 'match_type',   headerName: 'Match Type',  flex: 1, minWidth: 90  },
+  { field: 'clicks',       headerName: 'Clicks',      flex: 1, minWidth: 70,  valueFormatter: (v) => fmtNumber(v) },
+  { field: 'impressions',  headerName: 'Impressions', flex: 1, minWidth: 100, valueFormatter: (v) => fmtNumber(v) },
+  { field: 'ctr',          headerName: 'CTR',         flex: 1, minWidth: 60,  valueFormatter: (v) => fmtPercent(v) },
+];
+
+function KeywordsTable({ rows = [] }) {
+  if (!rows.length) return null;
+  const tableRows = rows.map((r, i) => ({ id: i, ...r }));
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Typography sx={{ fontFamily: FONT, fontWeight: 700, fontSize: '0.75rem', color: '#fff', textTransform: 'uppercase', letterSpacing: 0.8, mb: 1 }}>
+        Top Keywords
+      </Typography>
+      <DataGrid
+        rows={tableRows}
+        columns={KEYWORD_COLUMNS}
+        autoHeight
+        hideFooter
+        disableColumnMenu
+        disableRowSelectionOnClick
+        sx={{
+          border: 'none',
+          color: '#fff',
+          '& .MuiDataGrid-columnHeader':          { bgcolor: 'rgba(0,0,0,0.25)', color: '#fff' },
+          '& .MuiDataGrid-columnSeparator':       { display: 'none' },
+          '& .MuiDataGrid-cell':                  { borderColor: 'rgba(255,255,255,0.12)', color: '#fff' },
+          '& .MuiDataGrid-row:hover':             { bgcolor: 'rgba(255,255,255,0.08)' },
+          '& .MuiDataGrid-filler':                { bgcolor: 'transparent' },
+          '& .MuiDataGrid-scrollbarFiller':       { bgcolor: 'transparent' },
+          '& .MuiDataGrid-columnHeaderTitle':     { fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.8 },
+          bgcolor: 'rgba(0,0,0,0.15)',
+          borderRadius: 2,
+        }}
+      />
+    </Box>
+  );
+}
+
 // ─── Campaign data grid ───────────────────────────────────────────────────────
 // Print content area = 664px (720px letter − 16px container px − 40px section padding)
 // 9 flex units → 73.8px each. All minWidths kept ≤ 72px so flex fills 100% without overflow.
@@ -283,7 +325,8 @@ function ImageCardRow({ ads = [], height = 200 }) {
 }
 
 // ─── Rotated sidebar label — desktop only ────────────────────────────────────
-function SectionLabel({ name, side }) {
+function SectionLabel({ name, side, valign = 'center' }) {
+  const isTop = valign === 'flex-start';
   return (
     <Box
       data-report-section-label
@@ -291,10 +334,14 @@ function SectionLabel({ name, side }) {
         width: '17%',
         flexShrink: 0,
         display: { xs: 'none', md: 'flex' },
-        alignItems: 'center',
+        alignItems: valign,
         justifyContent: 'center',
         overflow: 'hidden',
-        py: 4,
+        // flex-start needs extra top padding: rotate(-90deg) makes visual height ≈ pre-rotation
+        // width, so the text clips at the top unless the pre-rotation center is pushed down far
+        // enough (pt > textWidth/2 − fontHeight/2).
+        pt: isTop ? { md: 22, lg: 28 } : 4,
+        pb: 4,
         pl: side === 'right' ? 0 : 1,
         pr: side === 'right' ? 1 : 0,
       }}
@@ -323,9 +370,9 @@ function SectionLabel({ name, side }) {
 }
 
 // ─── Channel section card ─────────────────────────────────────────────────────
-function ChannelSection({ name, bgcolor, labelSide = 'right', metrics, charts }) {
+function ChannelSection({ name, bgcolor, labelSide = 'right', labelValign = 'center', metrics, charts }) {
   const isLabelLeft = labelSide === 'left';
-  const label = <SectionLabel name={name} side={labelSide} />;
+  const label = <SectionLabel name={name} side={labelSide} valign={labelValign} />;
 
   const content = (
     <Box data-section-content sx={{ flex: 1, p: { xs: 2.5, md: 5 }, minWidth: 0 }}>
@@ -429,8 +476,14 @@ export default function HomesliceReport({ data, hideFab = false }) {
       name: 'Search',
       bgcolor: '#333535',
       labelSide: 'left',
+      labelValign: 'flex-start',
       metrics: buildMetrics(searchPage.cards, icons.cpc3, icons.cpm3),
-      charts: <CampaignTable rows={searchPage.campaign_table || []} />,
+      charts: (
+        <>
+          <CampaignTable rows={searchPage.campaign_table || []} />
+          <KeywordsTable rows={searchPage.top_keywords || []} />
+        </>
+      ),
     },
     websitePage && {
       name: 'RC Post',

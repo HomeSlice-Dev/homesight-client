@@ -31,6 +31,22 @@ body {
 @page {
   size: letter portrait;
   margin: 0.5in;
+  background: #0d1b2a;
+
+  /* Remove browser-injected URL and page title from the top margin */
+  @top-left   { content: ""; }
+  @top-center { content: ""; }
+  @top-right  { content: ""; }
+
+  /* Remove date from bottom-left; keep only page number bottom-right */
+  @bottom-left   { content: ""; }
+  @bottom-center { content: ""; }
+  @bottom-right  {
+    content: counter(page);
+    font-family: sans-serif;
+    font-size: 9pt;
+    color: rgba(255, 255, 255, 0.6);
+  }
 }
 
 @media print {
